@@ -21,7 +21,7 @@ export const heroStyles: Record<HeroStyle, { label: string; description: string 
   mur: {
     label: 'Mur de photos',
     description:
-      'Des colonnes de photos défilent en continu, en sens alternés, sur toute la page derrière le titre.',
+      "Des photos de tailles et de formats variés, posées en décalé, dérivent lentement vers le haut ; le titre passe par-dessus. Au survol, une photo s'arrête et mène à son projet.",
   },
   'bandeau-haut': {
     label: 'Bandeau, titre au-dessus',

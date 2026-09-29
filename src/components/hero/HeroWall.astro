@@ -1,52 +1,70 @@
 ---
 /**
- * A wall of photographs behind the title: columns running endlessly, one up,
- * the next down, each at its own pace. Pure CSS — each column holds its set
- * twice and slides by exactly one set, so the loop has no seam.
+ * The photo wall, after the studio's sketch: photographs of different sizes
+ * and shapes, scattered with plenty of room around them, the title laid
+ * across them. They drift upwards without end, each column at its own pace,
+ * so the arrangement never repeats the same way twice.
+ *
+ * Each column holds its photographs twice and slides by exactly one set, so
+ * the loop has no seam. A photograph under the pointer stops its column and
+ * leads to its project.
  */
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
+import { url } from '../../lib/url';
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
 
-/* Every project's cover and first photographs, without repeats, interleaved
-   so neighbouring images come from different projects. */
+/* Every cover first, then each project's second and third photographs: the
+   first photograph of a band is often a near-copy of the cover. */
 const seen = new Set<string>();
-const depth = Math.max(...projects.map((p) => p.data.strip.length));
-const pool = Array.from({ length: depth + 1 }, (_, round) =>
-  projects.map((p) => (round === 0 ? p.data.cover : p.data.strip[round - 1]))
-)
-  .flat()
-  .filter((img): img is NonNullable<typeof img> => !!img && !seen.has(img.src) && !!seen.add(img.src))
-  .slice(0, 36);
+const pool = [
+  ...projects.map((p) => ({ project: p, img: p.data.cover })),
+  ...[1, 2, 0].flatMap((n) => projects.map((p) => ({ project: p, img: p.data.strip[n] }))),
+].filter(({ img }) => !!img && !seen.has(img.src) && !!seen.add(img.src));
 
-const COLUMNS = 6;
-const PER_COLUMN = 6;
-/** Seconds for one full set to pass; alternated so no two neighbours match. */
-const PACE = [78, 96, 70, 104, 84, 92];
+const LANES = 4;
+const PER_LANE = 6;
+/** Room below each photograph, in screen heights — uneven on purpose. */
+const GAPS = [16, 30, 21, 26, 34, 18];
 
-const columns = Array.from({ length: COLUMNS }, (_, c) =>
-  Array.from({ length: PER_COLUMN }, (_, k) => pool[(c * PER_COLUMN + k * 5 + c) % pool.length])
+/* Natural proportions, kept between a portrait and a wide landscape. */
+const ratio = (w: number, h: number) => Math.min(Math.max(w / h, 0.78), 1.6);
+
+const lanes = Array.from({ length: LANES }, (_, l) =>
+  Array.from({ length: PER_LANE }, (_, k) => {
+    const item = pool[(l + k * LANES) % pool.length];
+    return { ...item, r: ratio(item.img.width, item.img.height), gap: GAPS[(l * 2 + k) % GAPS.length] };
+  })
 );
 ---
 
-<div class="wall" aria-hidden="true">
+<div class="wall" data-wall>
   {
-    columns.map((images, c) => (
-      <div class="wall__col" style={`--dur: ${PACE[c]}s; --i: ${c}`}>
-        <div class:list={['wall__track', c % 2 === 1 && 'wall__track--down']}>
+    lanes.map((items, l) => (
+      <div class:list={['wall__lane', `wall__lane--${l + 1}`]}>
+        <div class="wall__track">
           {[0, 1].map((copy) =>
-            images.map((img, k) => (
-              <figure class="wall__item">
-                <Image
-                  src={img}
-                  alt=""
-                  widths={[320, 480, 640]}
-                  sizes="(max-width: 809px) 34vw, (max-width: 1199px) 21vw, 17vw"
-                  quality={78}
-                  loading={copy === 0 && k < 3 ? 'eager' : 'lazy'}
-                />
-              </figure>
+            items.map(({ project, img, r, gap }, k) => (
+              <a
+                class="wall__item"
+                href={url(`/projects/${project.id}`)}
+                style={`--r: ${r.toFixed(3)}; --gap: ${gap}svh`}
+                tabindex="-1"
+                aria-hidden="true"
+              >
+                <span class="wall__zoom">
+                  <Image
+                    src={img}
+                    alt=""
+                    widths={[320, 480, 640, 800]}
+                    sizes="(max-width: 809px) 52vw, (max-width: 1199px) 30vw, 24vw"
+                    quality={80}
+                    loading={copy === 0 && k < 2 ? 'eager' : 'lazy'}
+                  />
+                </span>
+                <span class="wall__name">{project.data.title}</span>
+              </a>
             ))
           )}
         </div>
@@ -57,56 +75,67 @@ const columns = Array.from({ length: COLUMNS }, (_, c) =>
 
 <style>
   .wall {
-    --gap: 14px;
     position: absolute;
     inset: 0;
     z-index: 0;
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: var(--gap);
-    padding-inline: var(--gap);
     overflow: hidden;
   }
 
-  /* Dimmed most behind the title, least at the edges. */
+  /* Keeps the menu bar readable when a photograph drifts under it. */
   .wall::after {
     content: '';
     position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 58% 46% at 50% 50%, rgba(22, 22, 22, 0.82), rgba(22, 22, 22, 0.5) 75%),
-      linear-gradient(180deg, rgba(22, 22, 22, 0.55), transparent 22%, transparent 78%, rgba(22, 22, 22, 0.7));
+    inset: 0 0 auto 0;
+    height: 140px;
+    background: linear-gradient(180deg, rgba(22, 22, 22, 0.85), transparent);
     pointer-events: none;
   }
 
-  .wall__col {
-    position: relative;
-    min-width: 0;
+  /* Columns of unequal width at uneven intervals, each at its own pace and
+     starting from its own point in the loop. */
+  .wall__lane {
+    position: absolute;
+    top: 0;
+    left: var(--x);
+    width: var(--w);
   }
 
-  /* Two copies of the set, plus one trailing gap so each copy is exactly
-     half the track. Columns start at different points of their loop. */
+  /* Paces between ~19 and ~35px/s at 1440×900: different enough to read
+     as depth, the large photographs moving slowest. */
+  .wall__lane--1 { --x: 3vw;  --w: 23vw; --dur: 90s; --from: 0.12; }
+  .wall__lane--2 { --x: 31vw; --w: 14vw; --dur: 42s; --from: 0.58; }
+  .wall__lane--3 { --x: 52vw; --w: 20vw; --dur: 66s; --from: 0.33; }
+  .wall__lane--4 { --x: 79vw; --w: 17vw; --dur: 50s; --from: 0.81; }
+
   .wall__track {
     display: flex;
     flex-direction: column;
-    gap: var(--gap);
-    padding-bottom: var(--gap);
     animation: wall-up var(--dur) linear infinite;
-    animation-delay: calc(var(--dur) * -0.29 * var(--i));
+    animation-delay: calc(var(--dur) * -1 * var(--from));
     will-change: transform;
   }
-
-  .wall__track--down { animation-direction: reverse; }
 
   @keyframes wall-up {
     to { transform: translateY(-50%); }
   }
 
+  .wall__lane:hover .wall__track { animation-play-state: paused; }
+  :global([data-covered]) .wall__track { animation-play-state: paused; }
+
   .wall__item {
-    margin: 0;
-    aspect-ratio: 4 / 5;
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: var(--r);
+    margin-bottom: calc(var(--gap) * var(--gap-scale, 1));
     overflow: hidden;
     background: var(--bg-raised);
+  }
+
+  .wall__zoom {
+    display: block;
+    height: 100%;
+    transition: transform 1.1s var(--spring-smooth);
   }
 
   .wall__item :global(img) {
@@ -115,20 +144,55 @@ const columns = Array.from({ length: COLUMNS }, (_, c) =>
     object-fit: cover;
   }
 
-  /* Out of sight under the grey panel: stop. */
-  :global([data-covered]) .wall__track { animation-play-state: paused; }
-
-  @media (max-width: 1199.98px) {
-    .wall { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-    .wall__col:nth-child(n + 6) { display: none; }
+  .wall__name {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 12px;
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+      opacity 0.45s var(--ease),
+      transform 0.45s var(--ease);
   }
 
+  .wall__item:hover .wall__zoom { transform: scale(1.045); }
+  .wall__item:hover .wall__name { opacity: 1; transform: none; }
+
+  @media (max-width: 1199.98px) {
+    .wall__lane--1 { --x: 3vw;  --w: 30vw; }
+    .wall__lane--2 { --x: 39vw; --w: 21vw; }
+    .wall__lane--3 { --x: 67vw; --w: 29vw; }
+    .wall__lane--4 { display: none; }
+  }
+
+  /* On a phone, two staggered columns — the sketch's own layout. */
   @media (max-width: 809.98px) {
-    .wall { --gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .wall__col:nth-child(n + 4) { display: none; }
+    /* Photographs are smaller here, so the room around them shrinks too. */
+    .wall { --gap-scale: 0.5; }
+    .wall__lane--1 { --x: 4vw;  --w: 52vw; }
+    .wall__lane--2 { --x: 60vw; --w: 36vw; }
+    .wall__lane--3 { display: none; }
+    .wall__name { display: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .wall__track { animation: none; }
   }
 </style>
+
+<script>
+  /* The photographs below the fold load lazily so the first screen paints
+     first; once the page is in, fetch the rest before they drift into view. */
+  const warm = () =>
+    document.querySelectorAll<HTMLImageElement>('.wall img[loading="lazy"]').forEach((img) => (img.loading = 'eager'));
+
+  document.addEventListener('astro:page-load', () => {
+    if (document.readyState === 'complete') warm();
+    else window.addEventListener('load', warm, { once: true });
+  });
+</script>

@@ -160,12 +160,25 @@ const offsets = lines.map((_, i) => lines.slice(0, i).join(' ').split(' ').filte
 
   /* --- Over photographs: the subtitle and badge need full white ---------- */
 
-  .hero--plein-ecran .hero__sub,
-  .hero--mur .hero__sub { color: rgba(255, 255, 255, 0.86); }
-  .hero--plein-ecran .hero__inner,
-  .hero--mur .hero__inner { text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35); }
-  .hero--plein-ecran .badge,
-  .hero--mur .badge { color: rgba(255, 255, 255, 0.82); }
+  .hero--plein-ecran .hero__sub { color: rgba(255, 255, 255, 0.86); }
+  .hero--plein-ecran .hero__inner { text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35); }
+  .hero--plein-ecran .badge { color: rgba(255, 255, 255, 0.82); }
+
+  /* --- Photo wall: the title laid across the photographs -----------------
+     Painted in `difference`, the wording is white over the page and turns
+     to the photograph's negative where it crosses one, so it reads
+     wherever the photographs drift. It lets the pointer through to them. */
+
+  .hero--mur .hero__inner {
+    mix-blend-mode: difference;
+    pointer-events: none;
+  }
+  .hero--mur .hero__title,
+  .hero--mur .hero__sub { color: #fff; }
+  .hero--mur .badge {
+    color: #fff;
+    mix-blend-mode: difference;
+  }
 
   /* --- Band: title and a running strip share the screen ------------------ */
 
