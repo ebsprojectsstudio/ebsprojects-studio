@@ -1,0 +1,178 @@
+---
+/**
+ * A band of photographs running right to left across the full width, above
+ * or below the title. It stops under the pointer; each photograph leads to
+ * its project, whose name appears on hover as on the project cards.
+ */
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import { url } from '../../lib/url';
+
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+
+/* Each project's cover, then a second photograph of each, so the band runs
+   through every project twice before repeating. */
+const seen = new Set<string>();
+const items = [
+  ...projects.map((p) => ({ project: p, img: p.data.cover })),
+  ...projects.map((p) => ({ project: p, img: p.data.strip[1] ?? p.data.strip[0] })),
+].filter(({ img }) => !seen.has(img.src) && !!seen.add(img.src));
+
+/* Natural proportions, kept between a portrait and a wide landscape so no
+   panorama turns into a sliver or a banner. */
+const ratio = (w: number, h: number) => Math.min(Math.max(w / h, 0.78), 1.6);
+const ratios = items.map(({ img }) => ratio(img.width, img.height));
+
+/* A steady ~45px/s at the band's usual 360px height, whatever the number of
+   photographs: the duration is the set's length in band heights. */
+const lengthInHeights = ratios.reduce((sum, r) => sum + r, 0) + items.length * (12 / 360);
+const duration = Math.round((lengthInHeights * 360) / 45);
+---
+
+<div class="band" style={`--dur: ${duration}s`}>
+  <div class="band__track">
+    {
+      [0, 1].map((copy) => (
+        <ul class="band__set" aria-hidden={copy === 1 ? 'true' : undefined}>
+          {items.map(({ project, img }, i) => (
+            <li class="band__item" style={`--r: ${ratios[i].toFixed(3)}`}>
+              <a href={url(`/projects/${project.id}`)} tabindex={copy === 1 ? -1 : undefined}>
+                <span class="band__zoom">
+                  <Image
+                    src={img}
+                    alt={copy === 0 ? project.data.title : ''}
+                    widths={[400, 640, 960]}
+                    sizes="(max-width: 809px) 60vw, 30vw"
+                    quality={82}
+                    loading={copy === 0 && i < 5 ? 'eager' : 'lazy'}
+                  />
+                </span>
+                <span class="band__meta" aria-hidden="true">
+                  <span class="band__title">{project.data.title}</span>
+                  <span class="band__services">
+                    {project.data.services.map((s) => <span>{s}</span>)}
+                  </span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .band {
+    --band-h: clamp(200px, 38svh, 420px);
+    --gap: 12px;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: var(--band-h);
+    overflow: hidden;
+    /* Photographs come in and go out of a soft edge rather than a cut. */
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  }
+
+  .band__track {
+    display: flex;
+    width: max-content;
+    height: 100%;
+    animation: band-x var(--dur) linear infinite;
+    will-change: transform;
+  }
+
+  .band:hover .band__track { animation-play-state: paused; }
+  :global([data-covered]) .band__track { animation-play-state: paused; }
+
+  /* Each copy ends with a gap, so a copy is exactly half the track. */
+  .band__set {
+    display: flex;
+    gap: var(--gap);
+    height: 100%;
+    margin: 0;
+    padding: 0 var(--gap) 0 0;
+    list-style: none;
+  }
+
+  @keyframes band-x {
+    to { transform: translateX(-50%); }
+  }
+
+  .band__item {
+    flex: none;
+    height: 100%;
+    aspect-ratio: var(--r);
+  }
+
+  .band__item a {
+    position: relative;
+    display: block;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg-raised);
+  }
+
+  .band__zoom {
+    display: block;
+    height: 100%;
+    transition: transform 1.1s var(--spring-smooth);
+  }
+
+  .band__item :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* As on the project cards: title bottom left, services stacked right. */
+  .band__meta {
+    position: absolute;
+    inset: auto 0 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+    padding: 14px 16px;
+    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+      opacity 0.45s var(--ease),
+      transform 0.45s var(--ease);
+  }
+
+  .band__title {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-align: left;
+  }
+
+  .band__services {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.78);
+    text-align: right;
+  }
+
+  .band__item a:hover .band__zoom,
+  .band__item a:focus-visible .band__zoom { transform: scale(1.045); }
+  .band__item a:hover .band__meta,
+  .band__item a:focus-visible .band__meta { opacity: 1; transform: none; }
+
+  @media (max-width: 809.98px) {
+    .band { --band-h: clamp(170px, 28svh, 250px); --gap: 8px; }
+    .band__meta { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .band__track { animation: none; }
+    /* Nothing runs by itself, so let the reader scroll it. */
+    .band { overflow-x: auto; }
+  }
+</style>

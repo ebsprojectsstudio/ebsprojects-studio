@@ -169,6 +169,45 @@ collections:
         media_folder: /src/assets/images
         public_folder: ../../assets/images
         fields:
+          - name: hero
+            label: Animation d'ouverture
+            widget: object
+            collapsed: false
+            fields:
+              - name: style
+                label: Animation
+                hint: >-
+                  Pour les comparer, chacune est visible sur /apercu/ (adresse du
+                  site suivie de /apercu/).
+                widget: select
+                default: trail
+                options:
+                  - { label: "Traînée de photos (autour du titre, suit la souris)", value: trail }
+                  - { label: "Plein écran (photos derrière le titre)", value: plein-ecran }
+                  - { label: "Mur de photos (colonnes qui défilent)", value: mur }
+                  - { label: "Bandeau de photos, titre au-dessus", value: bandeau-haut }
+                  - { label: "Bandeau de photos, titre en dessous", value: bandeau-bas }
+                  - { label: "Photos dans le titre", value: typo }
+              - name: slides
+                label: Photos (plein écran et photos dans le titre)
+                hint: >-
+                  Un projet et la photo à montrer. Préférez des photos en paysage,
+                  assez sombres ou contrastées pour qu'un titre blanc reste lisible.
+                  Les autres animations piochent dans tous les projets.
+                widget: list
+                required: false
+                summary: "{{fields.project}}"
+                fields:
+                  - name: project
+                    label: Projet
+                    widget: relation
+                    collection: projects
+                    value_field: "{{slug}}"
+                    search_fields: [title, client]
+                    display_fields: [title]
+                  - name: image
+                    label: Photo
+                    widget: image
           - name: selected
             label: Projets sélectionnés (« Selected projects »)
             hint: >-

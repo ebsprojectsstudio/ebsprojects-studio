@@ -179,14 +179,13 @@ button:active:not(:disabled) { scale: 0.96; transition: scale var(--press); }
 
 /* --- Section heading rule ------------------------------------------------ */
 
+/* No rule beneath, as on the original; 43px to the grid at 1440. */
 .section-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  padding-bottom: 1.25rem;
-  border-bottom: 1px solid var(--line-soft);
-  margin-bottom: clamp(0.85rem, 1.5vw, 1.35rem);
+  margin-bottom: clamp(1.5rem, 3vw, 3.25rem);
 }
 
 /* --- Inline link with animated underline --------------------------------- */

@@ -43,8 +43,10 @@ src/
     projects/        Un fichier .md par projet
     expertises/      Un fichier .md par expertise
   data/site.ts       Contact, réseaux sociaux, clients, étapes du projet
+  data/hero.ts       Les animations d'ouverture proposées
   assets/images/     Images sources (haute définition)
-  components/        Header, Footer, cartes projet, filtres
+  components/        Header, Footer, cartes projet, filtres, page d'accueil
+  components/hero/   Les variantes de l'animation d'ouverture
   layouts/Base.astro Structure HTML commune + SEO
   pages/             Routes du site
   styles/global.css  Couleurs, typographie, espacements
@@ -66,7 +68,10 @@ Elle s'appuie sur [Sveltia CMS](https://sveltiacms.app) et permet de :
   bandeau, galerie avec la largeur et le recadrage de chaque image, liens ;
 - **choisir les projets de l'accueil** (« Selected projects ») et leur ordre ;
 - **composer le diaporama** du bas de l'accueil : un projet et la photo à
-  montrer pour lui.
+  montrer pour lui ;
+- **choisir l'animation d'ouverture** de l'accueil et ses photos. Les six
+  variantes se comparent sur `/apercu/` (non référencé par les moteurs de
+  recherche) avant d'en mettre une en ligne.
 
 Chaque enregistrement crée un commit sur GitHub ; le site se reconstruit et se
 republie tout seul en une à deux minutes. Les photos envoyées sont converties
@@ -87,7 +92,8 @@ Les fiches sont des fichiers Markdown :
 
 - `src/content/projects/*.md` — un fichier par projet ; le nom du fichier
   donne l'adresse (`mon-projet.md` → `/projects/mon-projet`) ;
-- `src/content/pages/home.md` — les projets de l'accueil et le diaporama ;
+- `src/content/pages/home.md` — l'animation d'ouverture, les projets de
+  l'accueil et le diaporama ;
 - `src/content/expertises/*.md` — les sept expertises.
 
 Exemple de projet :

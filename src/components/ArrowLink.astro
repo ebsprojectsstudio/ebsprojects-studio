@@ -1,0 +1,60 @@
+---
+/**
+ * "Voir tous les projets", as on the original: a 32px disc holding an
+ * up-right arrow (Framer's own 18px icon), 12px, then the label in capitals.
+ */
+import type { HTMLAttributes } from 'astro/types';
+
+type Props = HTMLAttributes<'a'>;
+const { class: className, ...rest } = Astro.props;
+---
+
+<a class:list={['arrow-link', className]} {...rest}>
+  <span class="arrow-link__disc" aria-hidden="true">
+    <svg width="18" height="18" viewBox="0 0 18 18">
+      <path
+        d="M13.922 4.5v7.313a.422.422 0 0 1-.844 0V5.52l-8.283 8.275a.422.422 0 0 1-.59-.59l8.275-8.283H6.187a.422.422 0 0 1 0-.844H13.5c.233 0 .422.189.422.422Z"
+        fill="currentColor"></path>
+    </svg>
+  </span>
+  <span class="arrow-link__label"><slot /></span>
+</a>
+
+<style>
+  .arrow-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-size: var(--fs-label);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--fg);
+  }
+
+  .arrow-link__disc {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(218, 197, 167, 0.05);
+    overflow: hidden;
+    transition: background-color 0.4s var(--ease);
+  }
+
+  .arrow-link__disc svg { transition: transform 0.5s var(--spring-smooth); }
+
+  /* Underline drawn from the left, like the other text links. */
+  .arrow-link__label {
+    padding-bottom: 2px;
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0% 1px no-repeat;
+    transition: background-size 0.45s var(--ease);
+  }
+
+  .arrow-link:hover .arrow-link__disc,
+  .arrow-link:focus-visible .arrow-link__disc { background: rgba(218, 197, 167, 0.14); }
+  .arrow-link:hover .arrow-link__disc svg { transform: translate(2px, -2px); }
+  .arrow-link:hover .arrow-link__label,
+  .arrow-link:focus-visible .arrow-link__label { background-size: 100% 1px; }
+</style>

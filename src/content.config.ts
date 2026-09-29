@@ -1,5 +1,6 @@
 import { defineCollection, reference, z } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { HERO_STYLES } from './data/hero';
 
 /** The seven expertises, spelled exactly as the expertise pages expect. */
 export const SERVICES = [
@@ -70,6 +71,22 @@ const pages = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/pages' }),
   schema: ({ image }) =>
     z.object({
+      /** The opening animation, and the photographs it shows where it takes
+          a chosen set (full screen and inside the title). The others draw
+          on every project. */
+      hero: z
+        .object({
+          style: z.enum(HERO_STYLES).default('trail'),
+          slides: z
+            .array(
+              z.object({
+                project: reference('projects'),
+                image: image(),
+              })
+            )
+            .default([]),
+        })
+        .default({}),
       /** "Selected projects", in display order. */
       selected: z.array(reference('projects')).min(1),
       /** The slideshow above the footer: a project, and the photograph shown for it. */

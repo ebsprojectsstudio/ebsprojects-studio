@@ -1,0 +1,134 @@
+---
+/**
+ * The list of opening animations to compare. Each opens the full home page
+ * with that animation; the switcher at the bottom moves between them.
+ */
+import { getEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { HERO_STYLES, heroStyles } from '../../data/hero';
+import { url } from '../../lib/url';
+
+const home = await getEntry('pages', 'home');
+const current = home?.data.hero.style;
+---
+
+<Base title="Aperçus de l'animation d'ouverture" noindex>
+  <section class="apercu">
+    <div class="wrap">
+      <p class="label--section">Aperçus</p>
+      <h1 class="title apercu__title">L'animation d'ouverture</h1>
+      <p class="lead apercu__lead">
+        Chaque lien ouvre la page d'accueil complète avec une animation différente. En bas à droite, le bouton
+        « Aperçu » permet de passer de l'une à l'autre. Pour en choisir une : interface d'édition, « Page
+        d'accueil », « Animation d'ouverture ».
+      </p>
+
+      <ol class="apercu__list">
+        {
+          HERO_STYLES.map((s, i) => (
+            <li>
+              <a class="apercu__item" href={url(`/apercu/${s}`)}>
+                <span class="apercu__index">{String(i + 1).padStart(2, '0')}</span>
+                <span class="apercu__body">
+                  <span class="apercu__name">
+                    {heroStyles[s].label}
+                    {s === current && <span class="apercu__badge">En ligne</span>}
+                  </span>
+                  <span class="apercu__desc">{heroStyles[s].description}</span>
+                </span>
+                <span class="apercu__go" aria-hidden="true">
+                  <svg width="15" height="11" viewBox="0 0 15 11" fill="none">
+                    <path d="M0 5.5h13M8.5 1l4.5 4.5L8.5 10" stroke="currentColor" stroke-width="1.2" />
+                  </svg>
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .apercu {
+    padding-top: clamp(7rem, 14vw, 10rem);
+    padding-bottom: var(--section-y);
+  }
+
+  .apercu__title { margin-top: 1rem; }
+
+  .apercu__lead {
+    max-width: 60ch;
+    margin-top: 1.25rem;
+    color: var(--fg-muted);
+  }
+
+  .apercu__list {
+    margin: clamp(2.5rem, 5vw, 4rem) 0 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .apercu__item {
+    display: grid;
+    grid-template-columns: 3rem 1fr auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.35rem 0;
+    border-bottom: 1px solid var(--line-soft);
+    transition: background-color 0.35s var(--ease);
+  }
+
+  .apercu__index {
+    font-size: 0.8125rem;
+    letter-spacing: 1.5px;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .apercu__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .apercu__name {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.125rem;
+  }
+
+  .apercu__badge {
+    padding: 0.2rem 0.55rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+
+  .apercu__desc {
+    max-width: 70ch;
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: var(--fg-muted);
+  }
+
+  .apercu__go {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--fg-muted);
+    transition: background-color 0.35s var(--ease), color 0.35s var(--ease);
+  }
+
+  .apercu__go svg { transition: transform 0.45s var(--ease); }
+  .apercu__item:hover .apercu__go { background: var(--surface-hover); color: var(--fg); }
+  .apercu__item:hover .apercu__go svg { transform: translateX(3px); }
+</style>

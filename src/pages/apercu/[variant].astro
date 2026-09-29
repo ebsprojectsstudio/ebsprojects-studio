@@ -1,0 +1,16 @@
+---
+/**
+ * One preview per opening animation, so the studio can compare them on the
+ * test site before choosing one in the CMS. Not indexed.
+ */
+import Home from '../../components/Home.astro';
+import { HERO_STYLES, type HeroStyle } from '../../data/hero';
+
+export function getStaticPaths() {
+  return HERO_STYLES.map((variant) => ({ params: { variant } }));
+}
+
+const { variant } = Astro.params as { variant: HeroStyle };
+---
+
+<Home variant={variant} preview />

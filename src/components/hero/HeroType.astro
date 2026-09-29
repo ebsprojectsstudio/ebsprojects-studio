@@ -1,0 +1,141 @@
+---
+/**
+ * The photographs seen through the letters of the title. This layer sits
+ * right behind the heading; Hero.astro paints the heading so that only its
+ * letters let the layer through. The photographs cross-fade one into the
+ * next while the whole layer drifts slowly, so the letters are never still.
+ */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import sharp from 'sharp';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import type { HeroSlide } from './Hero.astro';
+
+interface Props {
+  slides: HeroSlide[];
+}
+const { slides: chosen } = Astro.props;
+
+/* Seen only through the letters, a dark photograph turns the title into
+   near-black on black. Measured at build time, the darkest ones sit this
+   treatment out (they still show in the others). */
+const MIN_LUMINANCE = 0.3;
+/** The original file: named in the dev URL, or the build name minus its hash. */
+const sourceOf = (img: ImageMetadata) => {
+  const dev = img.src.match(/^\/@fs(\/[^?]+)/);
+  if (dev) return decodeURIComponent(dev[1]);
+  const name = img.src.split('/').pop()?.replace(/\.[\w-]{8}(\.\w+)$/, '$1');
+  const file = name && join(process.cwd(), 'src/assets/images', name);
+  return file && existsSync(file) ? file : undefined;
+};
+const luminance = async (img: ImageMetadata) => {
+  const path = sourceOf(img);
+  if (!path) return 1;
+  try {
+    const { channels } = await sharp(path).stats();
+    const [r, g, b] = channels.map((c) => c.mean / 255);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  } catch {
+    return 1;
+  }
+};
+const measured = await Promise.all(chosen.map(async (s) => ({ ...s, l: await luminance(s.image) })));
+const light = measured.filter((s) => s.l >= MIN_LUMINANCE);
+const slides = light.length >= 2 ? light : measured;
+
+const INTERVAL = 2200;
+---
+
+<div class="type" data-type data-interval={INTERVAL} aria-hidden="true">
+  <div class="type__drift">
+    {
+      slides.map(({ image }, i) => (
+        <Image
+          src={image}
+          alt=""
+          widths={[960, 1440, 1920, 2560]}
+          sizes="100vw"
+          quality={82}
+          loading={i < 2 ? 'eager' : 'lazy'}
+          class:list={['type__img', i === 0 && 'is-active']}
+        />
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  /* One pixel inside the heading, so no photograph shows at its edges.
+     `darken` keeps the darker of the two: the photographs' blacks are
+     lifted above the page colour (#161616 is 8.6% grey; the filter floors
+     at 10.8%), so around the letters the page colour always wins. */
+  .type {
+    position: absolute;
+    inset: 1px;
+    overflow: hidden;
+    filter: contrast(0.8) brightness(1.08) saturate(1.25);
+  }
+
+  .type__drift {
+    position: absolute;
+    inset: -18% -6%;
+    animation: type-drift 26s ease-in-out infinite alternate;
+  }
+
+  @keyframes type-drift {
+    from { transform: translate3d(-2%, -6%, 0) scale(1.02); }
+    to { transform: translate3d(2%, 6%, 0) scale(1.1); }
+  }
+
+  .type :global(.type__img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.9s var(--spring-smooth);
+  }
+
+  .type :global(.type__img.is-active) { opacity: 1; }
+
+  :global([data-covered]) .type__drift { animation-play-state: paused; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .type__drift { animation: none; }
+  }
+</style>
+
+<script>
+  let timer = 0;
+  const stop = () => {
+    if (timer) clearInterval(timer);
+    timer = 0;
+  };
+  document.addEventListener('astro:before-swap', stop);
+
+  const init = () => {
+    stop();
+    const root = document.querySelector<HTMLElement>('[data-type]');
+    if (!root) return;
+    const hero = root.closest<HTMLElement>('[data-hero]');
+    const images = [...root.querySelectorAll<HTMLImageElement>('.type__img')];
+    if (images.length < 2) return;
+
+    const warm = () => images.forEach((img) => (img.loading = 'eager'));
+    if (document.readyState === 'complete') warm();
+    else window.addEventListener('load', warm, { once: true });
+
+    let index = 0;
+    timer = window.setInterval(() => {
+      if (document.hidden || hero?.hasAttribute('data-covered')) return;
+      images[index].classList.remove('is-active');
+      index = (index + 1) % images.length;
+      images[index].classList.add('is-active');
+      images[(index + 1) % images.length].loading = 'eager';
+    }, Number(root.dataset.interval) || 2200);
+  };
+
+  document.addEventListener('astro:page-load', init);
+</script>

@@ -13,7 +13,8 @@ export default defineConfig({
   site,
   base,
   trailingSlash: 'ignore',
-  integrations: [sitemap()],
+  // The /apercu/ previews are for the studio only.
+  integrations: [sitemap({ filter: (page) => !page.includes('/apercu') })],
   image: {
     // Generated at build time — no external image service, no runtime cost.
     responsiveStyles: true,

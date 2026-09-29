@@ -1,0 +1,248 @@
+---
+/**
+ * The opening screen, in whichever treatment the studio has chosen (see
+ * src/data/hero.ts). The wording, the subtitle and the scroll badge are the
+ * same in all of them; only what moves around the title changes.
+ *
+ * In every treatment the hero stays pinned while "Selected projects" slides
+ * up over it, blurring as it goes (--hp, 0 -> 1, set below).
+ */
+import type { CollectionEntry } from 'astro:content';
+import type { ImageMetadata } from 'astro';
+import SplitText from '../SplitText.astro';
+import ImageTrail from '../ImageTrail.astro';
+import HeroFullscreen from './HeroFullscreen.astro';
+import HeroWall from './HeroWall.astro';
+import HeroBand from './HeroBand.astro';
+import HeroType from './HeroType.astro';
+import { site } from '../../data/site';
+import type { HeroStyle } from '../../data/hero';
+
+export interface HeroSlide {
+  project: CollectionEntry<'projects'>;
+  image: ImageMetadata;
+}
+
+interface Props {
+  variant: HeroStyle;
+  /** The chosen photographs, for the treatments that show a set. */
+  slides: HeroSlide[];
+}
+
+const { variant, slides } = Astro.props;
+
+const band = variant === 'bandeau-haut' || variant === 'bandeau-bas';
+
+/* Set very large, the title reads better — and shows more of the
+   photographs — on three lines. */
+const lines = variant === 'typo' ? ['Creative', 'Design', 'Studio'] : ['Creative', 'Design Studio'];
+const offsets = lines.map((_, i) => lines.slice(0, i).join(' ').split(' ').filter(Boolean).length);
+---
+
+<section class:list={['hero', `hero--${variant}`]} data-hero data-hero-variant={variant}>
+  <div class="hero__stage">
+    {variant === 'trail' && <ImageTrail />}
+    {variant === 'plein-ecran' && <HeroFullscreen slides={slides} />}
+    {variant === 'mur' && <HeroWall />}
+
+    <div class="wrap hero__inner">
+      <div class="hero__type">
+        {variant === 'typo' && <HeroType slides={slides} />}
+        <h1 class="display hero__title" data-hero-title>
+          {
+            lines.map((line, i) => (
+              <SplitText text={line} preset="heroTitle" indexOffset={offsets[i]} class="hero__line" />
+            ))
+          }
+        </h1>
+      </div>
+      <p class="hero__sub"><SplitText text={site.subtitle} preset="heroSubtitle" /></p>
+    </div>
+
+    {band && <HeroBand />}
+
+    {
+      !band && (
+        <a class="badge" href="#work" aria-label="Faire défiler vers les projets">
+          <svg class="badge__ring" viewBox="0 0 100 100" aria-hidden="true">
+            <defs>
+              <path id="badge-arc" d="M50,50 m-34,0 a34,34 0 1,1 68,0 a34,34 0 1,1 -68,0" />
+            </defs>
+            <text>
+              <textPath href="#badge-arc" startOffset="0">
+                Welcolme • Discover • Scroll •&nbsp;
+              </textPath>
+            </text>
+          </svg>
+        </a>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: sticky;
+    top: 0;
+    z-index: 0;
+    height: 100svh;
+    min-height: 560px;
+    overflow: hidden;
+  }
+
+  /* Blurred and dimmed as the page scrolls. */
+  .hero__stage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    filter: blur(calc(var(--hp, 0) * 14px));
+    opacity: calc(1 - var(--hp, 0) * 0.45);
+    transform: scale(calc(1 - var(--hp, 0) * 0.03));
+  }
+
+  .hero__inner {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+  }
+
+  .hero__title {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hero :global(.hero__line) { display: block; }
+
+  .hero__sub {
+    margin-top: clamp(1rem, 2vw, 1.5rem);
+    font-size: clamp(0.75rem, 1.05vw, 0.9375rem);
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+
+  .badge {
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    bottom: clamp(2rem, 5vh, 3.5rem);
+    translate: -50% 0;
+    display: grid;
+    place-items: center;
+    width: 104px;
+    height: 104px;
+    color: var(--fg-muted);
+    transition: color 0.4s var(--ease);
+  }
+  .badge:hover { color: var(--fg); }
+
+  .badge__ring {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    animation: spin 18s linear infinite;
+  }
+
+  .badge__ring text {
+    font-size: 8px;
+    letter-spacing: 0.205em;
+    text-transform: uppercase;
+    fill: currentColor;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* --- Over photographs: the subtitle and badge need full white ---------- */
+
+  .hero--plein-ecran .hero__sub,
+  .hero--mur .hero__sub { color: rgba(255, 255, 255, 0.86); }
+  .hero--plein-ecran .hero__inner,
+  .hero--mur .hero__inner { text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35); }
+  .hero--plein-ecran .badge,
+  .hero--mur .badge { color: rgba(255, 255, 255, 0.82); }
+
+  /* --- Band: title and a running strip share the screen ------------------ */
+
+  .hero--bandeau-haut .hero__stage,
+  .hero--bandeau-bas .hero__stage {
+    gap: clamp(1.75rem, 5svh, 3.5rem);
+    /* Clear of the menu bar. */
+    padding-top: 64px;
+  }
+
+  .hero--bandeau-bas :global(.band) { order: -1; }
+
+  /* --- Photographs inside the letters -------------------------------------
+     The heading is painted in the page colour with `darken`: where it is the
+     page colour, the page wins; where the letters are white, the photograph
+     beneath shows through. The letters stay live text, animated as usual. */
+
+  .hero--typo .hero__type {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .hero--typo .hero__title {
+    position: relative;
+    font-size: min(15.5vw, 21svh);
+    line-height: 0.86;
+    letter-spacing: -0.06em;
+    font-weight: 600;
+    color: #fff;
+    background: var(--bg);
+    mix-blend-mode: darken;
+  }
+
+  /* On a phone the slideshow's caption and bars sit where the badge was. */
+  @media (max-width: 809.98px) {
+    .hero--plein-ecran .badge { display: none; }
+  }
+
+  /* The longest line, CREATIVE, spans the column on a phone. */
+  @media (max-width: 809.98px) {
+    .hero--typo .hero__title { font-size: min(19.5vw, 16svh); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .badge__ring { animation: none; }
+    .hero__stage { filter: none; opacity: 1; transform: none; }
+  }
+</style>
+
+<script>
+  /* Module-level, so a client-side navigation can unbind it. */
+  let onScroll: (() => void) | null = null;
+
+  document.addEventListener('astro:before-swap', () => {
+    if (onScroll) window.removeEventListener('scroll', onScroll);
+    onScroll = null;
+  });
+
+  const init = () => {
+    if (onScroll) window.removeEventListener('scroll', onScroll);
+    onScroll = null;
+
+    const hero = document.querySelector<HTMLElement>('[data-hero]');
+    if (!hero) return;
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    onScroll = () => {
+      const h = window.innerHeight || 1;
+      const p = Math.min(Math.max(window.scrollY / h, 0), 1);
+      if (!still) hero.style.setProperty('--hp', p.toFixed(3));
+      /* Fully covered by the grey panel: the photographs stop moving,
+         and the slideshows stop advancing, until it is back in view. */
+      hero.toggleAttribute('data-covered', p >= 1);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  };
+
+  document.addEventListener('astro:page-load', init);
+</script>

@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /admin/
+Disallow: /apercu/
 
 Sitemap: https://ebsprojects.studio/sitemap-index.xml

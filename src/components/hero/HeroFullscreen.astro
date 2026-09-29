@@ -1,0 +1,345 @@
+---
+/**
+ * Full-screen photographs behind the title. Each one wipes in over the last
+ * from the right while the one underneath drifts away to the left, then
+ * settles slowly, so the screen is never quite still. The project's name
+ * sits bottom left, with a progress bar per photograph bottom right.
+ */
+import { Image } from 'astro:assets';
+import type { HeroSlide } from './Hero.astro';
+import { url } from '../../lib/url';
+
+interface Props {
+  slides: HeroSlide[];
+}
+const { slides } = Astro.props;
+
+/** How long each photograph stays, in ms. Shared with the script. */
+const INTERVAL = 5000;
+---
+
+<div class="full" data-full data-interval={INTERVAL} style={`--interval: ${INTERVAL}ms`}>
+  {
+    slides.map(({ project, image }, i) => (
+      <figure class:list={['full__slide', i === 0 && 'is-active']} data-full-slide aria-hidden={i > 0 ? 'true' : undefined}>
+        <Image
+          src={image}
+          alt=""
+          widths={[960, 1440, 1920, 2560]}
+          sizes="100vw"
+          quality={82}
+          loading={i === 0 ? 'eager' : 'lazy'}
+          fetchpriority={i === 0 ? 'high' : undefined}
+          class="full__img"
+        />
+      </figure>
+    ))
+  }
+
+  <div class="full__shade" aria-hidden="true"></div>
+
+  <div class="full__captions">
+    {
+      slides.map(({ project }, i) => (
+        <a
+          class:list={['full__caption', i === 0 && 'is-active']}
+          href={url(`/projects/${project.id}`)}
+          data-full-caption
+          tabindex={i === 0 ? undefined : -1}
+          aria-hidden={i > 0 ? 'true' : undefined}
+        >
+          <span class="full__count">
+            {String(i + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}
+          </span>
+          <span class="full__title">{project.data.title}</span>
+          <span class="full__services">{project.data.services.join(' / ')}</span>
+        </a>
+      ))
+    }
+  </div>
+
+  <div class="full__bars" role="tablist" aria-label="Photographies">
+    {
+      slides.map(({ project }, i) => (
+        <button
+          class:list={['full__bar', i === 0 && 'is-active']}
+          type="button"
+          role="tab"
+          aria-selected={i === 0 ? 'true' : 'false'}
+          data-full-bar
+        >
+          <span class="full__fill" />
+          <span class="visually-hidden">{project.data.title}</span>
+        </button>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .full {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  /* Hidden to the right until it becomes the current one. */
+  .full__slide {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    overflow: hidden;
+    clip-path: inset(0 0 0 100%);
+  }
+
+  .full__slide.is-active {
+    z-index: 2;
+    clip-path: inset(0 0 0 0);
+    transition: clip-path 1.25s var(--spring-smooth);
+  }
+
+  /* The previous one stays beneath while the next wipes over it. */
+  .full__slide.is-leaving {
+    z-index: 1;
+    clip-path: inset(0 0 0 0);
+  }
+
+  .full__slide :global(.full__img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Where it waits: pushed right and over-size. */
+    transform: translateX(14%) scale(1.18);
+  }
+
+  /* In fast with the wipe, then a long slow settle. */
+  .full__slide.is-active :global(.full__img) {
+    transform: translateX(0) scale(1.03);
+    transition: transform 7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .full__slide.is-leaving :global(.full__img) {
+    transform: translateX(-12%) scale(1.03);
+    filter: brightness(0.55);
+    transition:
+      transform 1.4s var(--spring-smooth),
+      filter 1.4s var(--spring-smooth);
+  }
+
+  /* Enough shade for white type on any photograph, darkest where the
+     menu bar and the caption sit. */
+  .full__shade {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    background:
+      radial-gradient(ellipse 62% 46% at 50% 50%, rgba(10, 10, 10, 0.42), transparent 80%),
+      linear-gradient(
+        180deg,
+        rgba(10, 10, 10, 0.62) 0%,
+        rgba(10, 10, 10, 0.4) 28%,
+        rgba(10, 10, 10, 0.4) 62%,
+        rgba(10, 10, 10, 0.78) 100%
+      );
+    pointer-events: none;
+  }
+
+  /* --- Caption, bottom left ---------------------------------------------- */
+
+  .full__captions {
+    position: absolute;
+    z-index: 4;
+    left: var(--gutter);
+    bottom: clamp(2rem, 5vh, 3.5rem);
+    display: grid;
+  }
+
+  .full__caption {
+    grid-area: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+    transition:
+      opacity 0.45s var(--ease),
+      transform 0.45s var(--ease);
+  }
+
+  .full__caption.is-active {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    transition:
+      opacity 0.9s var(--spring-smooth) 0.35s,
+      transform 0.9s var(--spring-smooth) 0.35s;
+  }
+
+  .full__count {
+    font-size: 0.75rem;
+    letter-spacing: var(--tracking-label);
+    color: rgba(255, 255, 255, 0.6);
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 0.35rem;
+  }
+
+  .full__title {
+    font-size: 1.125rem;
+    line-height: 1.25;
+  }
+
+  .full__services {
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .full__caption:hover .full__title {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
+  }
+
+  /* --- One bar per photograph, bottom right, filling as it runs ---------- */
+
+  .full__bars {
+    position: absolute;
+    z-index: 4;
+    right: var(--gutter);
+    bottom: calc(clamp(2rem, 5vh, 3.5rem) + 4px);
+    display: flex;
+    gap: 6px;
+  }
+
+  .full__bar {
+    position: relative;
+    width: 28px;
+    height: 14px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+
+  /* The visible track is 2px; the button is taller to be easy to hit. */
+  .full__bar::before,
+  .full__fill {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+    height: 2px;
+  }
+
+  .full__bar::before {
+    background: rgba(255, 255, 255, 0.28);
+    transition: background-color 0.3s var(--ease);
+  }
+  .full__bar:hover::before { background: rgba(255, 255, 255, 0.6); }
+
+  .full__fill {
+    display: block;
+    background: #fff;
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  .full__bar.is-active .full__fill {
+    transform: scaleX(1);
+    transition: transform var(--interval) linear;
+  }
+
+  /* On a phone the caption and bars take the badge's place (Hero.astro
+     hides it here): caption above, bars beneath, both on the left. */
+  @media (max-width: 809.98px) {
+    .full__captions { bottom: calc(clamp(2rem, 5vh, 3.5rem) + 26px); right: var(--gutter); }
+    .full__bars { left: var(--gutter); right: auto; bottom: clamp(2rem, 5vh, 3.5rem); }
+    .full__title { font-size: 1rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .full__slide :global(.full__img),
+    .full__slide.is-active :global(.full__img),
+    .full__slide.is-leaving :global(.full__img) { transform: none; }
+  }
+</style>
+
+<script>
+  let timer = 0;
+  const stop = () => {
+    if (timer) clearTimeout(timer);
+    timer = 0;
+  };
+  document.addEventListener('astro:before-swap', stop);
+
+  const init = () => {
+    stop();
+    const root = document.querySelector<HTMLElement>('[data-full]');
+    if (!root) return;
+
+    const hero = root.closest<HTMLElement>('[data-hero]');
+    const slides = [...root.querySelectorAll<HTMLElement>('[data-full-slide]')];
+    const captions = [...root.querySelectorAll<HTMLElement>('[data-full-caption]')];
+    const bars = [...root.querySelectorAll<HTMLButtonElement>('[data-full-bar]')];
+    const INTERVAL = Number(root.dataset.interval) || 5000;
+    const n = slides.length;
+    if (n < 2) return;
+
+    let index = 0;
+
+    const imgOf = (i: number) => slides[(i + n) % n]?.querySelector('img');
+
+    const show = (i: number) => {
+      const prev = index;
+      index = (i + n) % n;
+      slides.forEach((s, k) => {
+        s.classList.toggle('is-active', k === index);
+        s.classList.toggle('is-leaving', k === prev && k !== index);
+        s.setAttribute('aria-hidden', k === index ? 'false' : 'true');
+      });
+      captions.forEach((c, k) => {
+        c.classList.toggle('is-active', k === index);
+        c.setAttribute('aria-hidden', k === index ? 'false' : 'true');
+        c.tabIndex = k === index ? 0 : -1;
+      });
+      bars.forEach((b, k) => {
+        // Re-arm the fill so it runs from empty for the new photograph.
+        b.classList.remove('is-active');
+        b.setAttribute('aria-selected', k === index ? 'true' : 'false');
+      });
+      void root.offsetWidth;
+      bars[index]?.classList.add('is-active');
+      // The one after next is needed within a few seconds.
+      imgOf(index + 1)?.setAttribute('loading', 'eager');
+    };
+
+    const schedule = () => {
+      stop();
+      timer = window.setTimeout(() => {
+        // Hold while nobody can see it; resume where it was.
+        if (!document.hidden && !hero?.hasAttribute('data-covered')) show(index + 1);
+        schedule();
+      }, INTERVAL);
+    };
+
+    bars.forEach((b, k) =>
+      b.addEventListener('click', () => {
+        if (k !== index) show(k);
+        schedule();
+      })
+    );
+
+    // Warm the whole set once the page itself is in.
+    const warm = () => slides.forEach((s) => s.querySelector('img')?.setAttribute('loading', 'eager'));
+    if (document.readyState === 'complete') warm();
+    else window.addEventListener('load', warm, { once: true });
+
+    imgOf(1)?.setAttribute('loading', 'eager');
+    schedule();
+  };
+
+  document.addEventListener('astro:page-load', init);
+</script>
