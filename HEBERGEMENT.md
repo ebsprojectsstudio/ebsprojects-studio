@@ -115,8 +115,22 @@ l'adresse du domaine arrive bien, puis résilier.
 - [ ] Les liens e-mail et téléphone ouvrent l'application attendue
 - [ ] Un e-mail envoyé à l'adresse du domaine arrive toujours
 - [ ] Le cadenas HTTPS s'affiche sur le domaine nu **et** sur `www`
+- [ ] Le formulaire de contact est activé (voir plus haut) et un message de test arrive
 - [ ] Une ancienne adresse accentuée redirige correctement, par exemple
       `/projects/expertises/édition`
+
+## Formulaire de contact
+
+La page `/contact` envoie ses messages par [FormSubmit](https://formsubmit.co),
+gratuit et sans compte : chaque message est transféré à
+`ebsprojects.studio@gmail.com`.
+
+**À faire une fois :** envoyer un premier message de test depuis le site.
+FormSubmit répond par un e-mail d'activation à cette adresse ; cliquer sur le
+lien. Tant que ce n'est pas fait, les messages ne sont pas délivrés.
+
+Pour changer de service plus tard, seules deux lignes sont à modifier, dans
+`src/data/site.ts` (`contactForm`).
 
 ## Coût après migration
 

@@ -1,0 +1,199 @@
+# Interface d'édition du site — https://sveltiacms.app
+#
+# Chaque enregistrement crée un commit sur GitHub ; le site se reconstruit
+# et se republie tout seul en une à deux minutes.
+
+backend:
+  name: github
+  repo: seguinhugo06-lgtm/ebsprojects-studio
+  branch: main
+  commit_messages:
+    create: "Ajoute {{collection}} « {{slug}} »"
+    update: "Modifie {{collection}} « {{slug}} »"
+    delete: "Supprime {{collection}} « {{slug}} »"
+    uploadMedia: "Ajoute l'image {{path}}"
+    deleteMedia: "Supprime l'image {{path}}"
+
+site_url: https://ebsprojects.studio
+display_url: https://ebsprojects.studio
+
+# Photos : dans src/assets/images, référencées depuis les fiches par un
+# chemin relatif, comme l'exige Astro pour les optimiser au build.
+media_folder: /src/assets/images
+public_folder: ../../assets/images
+
+media_libraries:
+  default:
+    config:
+      max_file_size: 25000000
+      slugify_filename: true
+      transformations:
+        # Les photos envoyées sont converties en WebP et ramenées à 3200 px
+        # au plus : le dépôt reste léger, le site les redécline ensuite.
+        raster_image:
+          format: webp
+          quality: 90
+          width: 3200
+          height: 3200
+
+# Adresses des nouveaux projets sans accents ni caractères spéciaux.
+slug:
+  encoding: ascii
+  clean_accents: true
+  sanitize_replacement: "-"
+
+collections:
+  # ---------------------------------------------------------------- Projets
+  - name: projects
+    label: Projets
+    label_singular: Projet
+    description: >-
+      Chaque projet a sa propre page. Il apparaît automatiquement dans la page
+      Projets et sur les pages des expertises cochées.
+    folder: src/content/projects
+    extension: md
+    format: frontmatter
+    create: true
+    delete: true
+    slug: "{{title}}"
+    identifier_field: title
+    summary: "{{title}} — {{client}}"
+    sortable_fields: [order, title]
+    media_folder: /src/assets/images
+    public_folder: ../../assets/images
+    fields:
+      - name: title
+        label: Titre du projet
+        widget: string
+      - name: client
+        label: Client
+        widget: string
+      - name: location
+        label: Lieu
+        widget: string
+        default: Paris
+      - name: services
+        label: Expertises
+        hint: Le projet apparaîtra sur la page de chaque expertise cochée.
+        widget: select
+        multiple: true
+        min: 1
+        options:
+          - Direction Artistique
+          - Identité Visuelle
+          - Illustration
+          - Digital
+          - Packaging
+          - Édition
+          - Signalétique
+      - name: order
+        label: Position dans la page Projets
+        hint: 1 = en premier. Deux projets peuvent avoir la même valeur.
+        widget: number
+        value_type: int
+        default: 99
+      - name: cover
+        label: Image de couverture
+        hint: Utilisée dans la page Projets et sur l'accueil.
+        widget: image
+      - name: thumb
+        label: Image des pages d'expertise
+        widget: image
+      - name: strip
+        label: Bandeau défilant (haut de la page projet)
+        hint: Trois images ou plus. Elles défilent en boucle.
+        widget: list
+        min: 1
+        field:
+          name: image
+          label: Image
+          widget: image
+      - name: grid
+        label: Galerie
+        hint: >-
+          Dans l'ordre d'affichage. Deux images « demi-largeur » à la suite se
+          placent côte à côte.
+        widget: list
+        min: 1
+        summary: "{{fields.span}} — {{fields.ratio}}"
+        fields:
+          - name: src
+            label: Image
+            widget: image
+          - name: span
+            label: Largeur
+            widget: select
+            default: full
+            options:
+              - { label: Pleine largeur, value: full }
+              - { label: Demi-largeur (deux côte à côte), value: half }
+          - name: ratio
+            label: Format de recadrage
+            widget: select
+            default: "1265 / 949"
+            options:
+              - { label: "Paysage 4:3 — pleine largeur", value: "1265 / 949" }
+              - { label: "Paysage large — pleine largeur", value: "1265 / 859" }
+              - { label: "Panoramique — pleine largeur", value: "1265 / 820" }
+              - { label: "Très panoramique — pleine largeur", value: "1265 / 783" }
+              - { label: "Presque carré — pleine largeur", value: "1265 / 1154" }
+              - { label: "Carré — demi-largeur", value: "613 / 613" }
+              - { label: "Paysage — demi-largeur", value: "613 / 541" }
+              - { label: "Portrait — demi-largeur", value: "613 / 681" }
+      - name: links
+        label: Liens (presse, Behance…)
+        widget: list
+        required: false
+        fields:
+          - name: label
+            label: Nom du lien
+            widget: string
+          - name: url
+            label: Adresse
+            widget: string
+            pattern: ["^https?://", "L'adresse doit commencer par https://"]
+      - name: body
+        label: Texte « Info »
+        widget: markdown
+        buttons: [bold, italic, link]
+        editor_components: []
+
+  # ------------------------------------------------------------------ Pages
+  - name: pages
+    label: Pages
+    files:
+      - name: home
+        label: Page d'accueil
+        file: src/content/pages/home.md
+        media_folder: /src/assets/images
+        public_folder: ../../assets/images
+        fields:
+          - name: selected
+            label: Projets sélectionnés (« Selected projects »)
+            hint: >-
+              Dans l'ordre d'affichage. Un nombre pair remplit mieux la grille
+              à deux colonnes.
+            widget: relation
+            collection: projects
+            value_field: "{{slug}}"
+            search_fields: [title, client]
+            display_fields: [title]
+            multiple: true
+            min: 1
+          - name: slider
+            label: Diaporama (bas de page)
+            hint: Un projet et la photo à montrer pour lui. Défilement toutes les 3 secondes.
+            widget: list
+            min: 1
+            summary: "{{fields.project}}"
+            fields:
+              - name: project
+                label: Projet
+                widget: relation
+                collection: projects
+                value_field: "{{slug}}"
+                search_fields: [title, client]
+                display_fields: [title]
+              - name: image
+                label: Photo affichée
+                widget: image

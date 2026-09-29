@@ -6,7 +6,6 @@ services:
   - "Digital"
   - "Édition"
 order: 4
-featured: false
 cover: "../../assets/images/adidas-pod-01.jpg"
 thumb: "../../assets/images/adidas-pod-04.jpg"
 strip:

@@ -5,7 +5,6 @@ location: "Paris"
 services:
   - "Édition"
 order: 2
-featured: false
 cover: "../../assets/images/mort-subite-04.jpg"
 thumb: "../../assets/images/mort-subite-01.jpg"
 strip:

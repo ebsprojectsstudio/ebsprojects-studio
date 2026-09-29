@@ -25,23 +25,33 @@ export const getStaticPaths = (async () => {
 const { project, related } = Astro.props;
 const { Content } = await render(project);
 const { title, client, location, services, strip, grid, links } = project.data;
+
+/* The band scrolls continuously. Each frame is 654px + a 20px gap, as on the
+   original; the set is repeated until it spans well over two widescreen
+   widths, so shifting it by exactly one set loops without a visible seam. */
+const FRAME = 674;
+const setWidth = strip.length * FRAME;
+const copies = Math.max(2, Math.ceil(5200 / setWidth));
+const band = Array.from({ length: copies }, (_, c) => strip.map((img, i) => ({ img, i, copy: c }))).flat();
+/** ~40px a second: slow enough to read as ambient, not as a carousel. */
+const bandSeconds = Math.round(setWidth / 40);
 ---
 
 <Base title={title} description={`${title} — ${services.join(', ')}. Projet réalisé par ebs:projects.studio.`}>
   <article class="project">
-    {/* --- Clipped band: three images, centred, bleeding off both sides --- */}
-    <div class="strip">
+    {/* --- Band: frames of 654x429, scrolling left without end ----------- */}
+    <div class="strip" style={`--copies:${copies};--band-s:${bandSeconds}s`}>
       <div class="strip__row">
         {
-          strip.map((img, i) => (
-            <figure class="strip__item">
+          band.map(({ img, i, copy }) => (
+            <figure class="strip__item" aria-hidden={copy > 0 ? 'true' : undefined}>
               <Image
                 src={img}
-                alt={`${title} — visuel ${i + 1}`}
-                widths={[500, 900, 1320, 1900]}
+                alt={copy > 0 ? '' : `${title} — visuel ${i + 1}`}
+                widths={[680, 1308, 1900]}
                 quality={85}
-                sizes="46vw"
-                loading={i < 3 ? 'eager' : 'lazy'}
+                sizes="654px"
+                loading={copy === 0 ? 'eager' : 'lazy'}
                 data-fade
               />
             </figure>
@@ -170,25 +180,43 @@ const { title, client, location, services, strip, grid, links } = project.data;
   /* --- Strip -------------------------------------------------------------- */
 
   .strip {
-    /* The row is wider than the page and is clipped on both sides. */
     overflow: clip;
     width: 100%;
   }
 
   .strip__row {
     display: flex;
-    justify-content: center;
     gap: 20px;
-    /* Wider than the page: centring makes it bleed off both sides equally. */
-    width: 100%;
+    width: max-content;
+    /* One full set to the left per cycle: the next copy lands exactly where
+       the first began. */
+    animation: band var(--band-s, 50s) linear infinite;
   }
 
+  .strip:hover .strip__row { animation-play-state: paused; }
+
+  @keyframes band {
+    to { transform: translateX(calc(-100% / var(--copies, 2))); }
+  }
+
+  /* 654x429 whatever the window width — the original keeps these fixed. */
   .strip__item {
     margin: 0;
     flex: none;
-    width: clamp(240px, 45.4vw, 900px);
-    aspect-ratio: 654 / 429;
+    width: 654px;
+    height: 429px;
     background: var(--bg-raised);
+  }
+
+  @media (max-width: 809.98px) {
+    .strip__item { width: 300px; height: 197px; }
+    /* The copies were sized for 674px frames; keep the same rhythm. */
+    .strip__row { animation-duration: calc(var(--band-s, 50s) * 0.46); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .strip { overflow-x: auto; }
+    .strip__row { animation: none; }
   }
 
   .strip__item :global(img) {
@@ -245,11 +273,12 @@ const { title, client, location, services, strip, grid, links } = project.data;
 
   .meta__info .label { margin-bottom: 0.6rem; }
 
+  /* 14px light, as on the original. */
   .meta__prose :global(p) {
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     font-weight: 300;
     line-height: 1.6;
-    color: var(--fg-muted);
+    color: var(--fg);
     max-width: 64ch;
   }
   .meta__prose :global(p + p) { margin-top: 1em; }

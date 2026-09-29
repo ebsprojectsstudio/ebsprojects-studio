@@ -5,7 +5,6 @@ location: "Paris"
 services:
   - "Édition"
 order: 1
-featured: false
 cover: "../../assets/images/epeda-04.jpg"
 thumb: "../../assets/images/epeda-thumb.jpg"
 strip:

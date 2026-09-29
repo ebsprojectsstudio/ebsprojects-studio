@@ -6,7 +6,6 @@ services:
   - "Signalétique"
   - "Illustration"
 order: 3
-featured: false
 cover: "../../assets/images/beer-factory-02.jpg"
 thumb: "../../assets/images/beer-factory-02.jpg"
 strip:

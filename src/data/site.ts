@@ -39,6 +39,17 @@ export const contact = {
 } as const;
 
 /** Order matches the footer bar on the original site. */
+/**
+ * Where the contact form sends its messages. FormSubmit forwards each one to
+ * the address in the URL; the very first submission triggers a one-off
+ * activation e-mail to that address, which must be confirmed once.
+ * To switch service later, change these two lines only.
+ */
+export const contactForm = {
+  ajax: `https://formsubmit.co/ajax/${contact.email}`,
+  post: `https://formsubmit.co/${contact.email}`,
+} as const;
+
 export const socials = [
   { label: 'LinkedIn', url: 'https://fr.linkedin.com/in/elina-bouyssou-13687aa9' },
   { label: 'Instagram', url: 'https://www.instagram.com/ebsprojects.studio/' },
@@ -49,7 +60,7 @@ export const nav = [
   { label: 'Home', href: '/' },
   { label: 'Projets', href: '/projects' },
   { label: 'Expertises', href: '/#expertises' },
-  { label: 'Contact', href: '/#contact' },
+  { label: 'Contact', href: '/contact' },
 ] as const;
 
 export const clients = [

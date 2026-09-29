@@ -1,20 +1,28 @@
 ---
 /**
- * The hero's cursor trail: project images spawn along the pointer's path,
- * bloom in, hold, then shrink and blur away.
+ * Project photographs behind the hero title, in two modes that share one look.
  *
- * Values come from the original Framer build's own component config:
- *   frequency  50   → a new image every 50px of travel
- *   visibleFor 1    → one second at full size before it leaves
- *   in   opacity 0 → 1, scale .5 → 1, blur 8px → 0, spring(300, 30)
- *   out  opacity → 0, scale → .5, blur → 8px
+ *  trail    Images spawn along the pointer's path, as on the original site.
+ *           Its own component config: a new image every 50px of travel, one
+ *           second at full size, spring(300, 30) in and out,
+ *           opacity 0 -> 1, scale .5 -> 1, blur 8px -> 0.
+ *
+ *  ambient  Added at the studio's request so the hero is alive before anyone
+ *           moves the mouse: images bloom by themselves around the title,
+ *           never on top of it. It steps aside while the pointer is drawing a
+ *           trail, and stops when the hero is scrolled away or the tab hidden.
  */
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
-/** One image per project, in listing order, cycled through as the pointer moves. */
-const sources = projects.map((p) => ({ img: p.data.cover, alt: p.data.title }));
+
+/** Covers first, then a second photograph per project, for variety. */
+const seen = new Set<string>();
+const sources = [
+  ...projects.map((p) => ({ img: p.data.cover, alt: p.data.title })),
+  ...projects.map((p) => ({ img: p.data.strip[1] ?? p.data.strip[0], alt: p.data.title })),
+].filter(({ img }) => (seen.has(img.src) ? false : (seen.add(img.src), true)));
 ---
 
 <div class="trail" data-trail aria-hidden="true">
@@ -22,7 +30,7 @@ const sources = projects.map((p) => ({ img: p.data.cover, alt: p.data.title }));
     {
       sources.map(({ img, alt }) => (
         <figure class="trail__item">
-          <Image src={img} alt={alt} widths={[240, 480]} sizes="180px" quality={85} loading="eager" />
+          <Image src={img} alt={alt} widths={[240, 480]} sizes="180px" quality={82} loading="lazy" />
         </figure>
       ))
     }
@@ -35,7 +43,7 @@ const sources = projects.map((p) => ({ img: p.data.cover, alt: p.data.title }));
     inset: 0;
     overflow: hidden;
     pointer-events: none;
-    /* Sits behind the hero wording, as on the original. */
+    /* Behind the hero wording, as on the original. */
     z-index: 0;
   }
 
@@ -47,12 +55,13 @@ const sources = projects.map((p) => ({ img: p.data.cover, alt: p.data.title }));
     width: 180px;
     height: 230px;
     margin: 0;
-    /* Spawn point is the pointer; the element is centred on it. */
+    /* The spawn point is the centre of the image. */
     translate: -50% -50%;
     opacity: 0;
     scale: 0.5;
     filter: blur(8px);
     will-change: opacity, scale, filter;
+    background: var(--bg-raised);
   }
 
   .trail :global(.trail__item img) {
@@ -61,98 +70,195 @@ const sources = projects.map((p) => ({ img: p.data.cover, alt: p.data.title }));
     object-fit: cover;
   }
 
-  .trail :global(.trail__item.is-in) {
-    opacity: 1;
-    scale: 1;
-    filter: blur(0px);
+  .trail :global(.trail__item.is-in),
+  .trail :global(.trail__item.is-out) {
     transition:
       opacity 0.33s var(--spring-bloom),
       scale 0.33s var(--spring-bloom),
       filter 0.33s var(--spring-bloom);
+  }
+
+  .trail :global(.trail__item.is-in) {
+    opacity: 1;
+    scale: 1;
+    filter: blur(0px);
+  }
+
+  /* Ambient images arrive and leave more slowly than the pointer's. */
+  .trail :global(.trail__item.is-ambient.is-in),
+  .trail :global(.trail__item.is-ambient.is-out) {
+    transition:
+      opacity 0.9s var(--spring-smooth),
+      scale 1.1s var(--spring-smooth),
+      filter 0.9s var(--spring-smooth);
   }
 
   .trail :global(.trail__item.is-out) {
     opacity: 0;
     scale: 0.5;
     filter: blur(8px);
-    transition:
-      opacity 0.33s var(--spring-bloom),
-      scale 0.33s var(--spring-bloom),
-      filter 0.33s var(--spring-bloom);
   }
 
-  /* A pointer trail is meaningless without a pointer, and unwelcome when
-     motion is reduced. */
-  @media (prefers-reduced-motion: reduce), (pointer: coarse) {
+  @media (max-width: 809.98px) {
+    .trail :global(.trail__item) {
+      width: 120px;
+      height: 154px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
     .trail { display: none; }
   }
 </style>
 
 <script>
+  /* Timers are module-level so a client-side navigation can clear them;
+     left running, they would keep spawning into a detached node. */
+  let ambientTimer = 0;
+  let onScroll: (() => void) | null = null;
+
+  const teardown = () => {
+    if (ambientTimer) clearInterval(ambientTimer);
+    ambientTimer = 0;
+    if (onScroll) window.removeEventListener('scroll', onScroll);
+    onScroll = null;
+  };
+
+  document.addEventListener('astro:before-swap', teardown);
+
   const init = () => {
-  const host = document.querySelector<HTMLElement>('[data-trail]');
-  const pool = document.querySelector<HTMLElement>('[data-trail-pool]');
+    teardown();
 
-  const fine = window.matchMedia('(pointer: fine)').matches;
-  const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const host = document.querySelector<HTMLElement>('[data-trail]');
+    const pool = document.querySelector<HTMLElement>('[data-trail-pool]');
+    if (!host || !pool) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  if (host && pool && fine && !still) {
     const templates = [...pool.querySelectorAll<HTMLElement>('.trail__item')];
+    if (!templates.length) return;
 
-    /** Distance in px the pointer must travel before the next image appears. */
-    const FREQUENCY = 50;
-    /** How long an image holds at full size, in ms. */
-    const VISIBLE_FOR = 1000;
-    /** Matches the CSS transition above. */
-    const TRANSITION = 330;
+    // The pool is lazy so the hero paints first; warm it once the page is in.
+    const warm = () => pool.querySelectorAll('img').forEach((img) => (img.loading = 'eager'));
+    if (document.readyState === 'complete') warm();
+    else window.addEventListener('load', warm, { once: true });
 
-    let lastX: number | null = null;
-    let lastY: number | null = null;
     let next = 0;
 
-    const spawn = (x: number, y: number) => {
+    const spawn = (x: number, y: number, ambient: boolean) => {
       const node = templates[next % templates.length].cloneNode(true) as HTMLElement;
       next++;
+      node.querySelector('img')?.setAttribute('loading', 'eager');
+      if (ambient) node.classList.add('is-ambient');
       node.style.left = `${x}px`;
       node.style.top = `${y}px`;
       host.appendChild(node);
 
-      // Force a style resolve so the transition runs from the start state.
+      // Resolve the start state first so the transition actually runs.
       void node.offsetWidth;
       node.classList.add('is-in');
 
+      const hold = ambient ? 2400 : 1000;
+      const out = ambient ? 1000 : 330;
       window.setTimeout(() => {
         node.classList.remove('is-in');
         node.classList.add('is-out');
-        window.setTimeout(() => node.remove(), TRANSITION + 60);
-      }, VISIBLE_FOR);
+        window.setTimeout(() => node.remove(), out + 80);
+      }, hold);
     };
 
-    host.parentElement?.addEventListener(
-      'pointermove',
-      (e) => {
-        if (e.pointerType !== 'mouse') return;
-        const rect = host.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+    /* --- Pointer trail ---------------------------------------------------- */
+    const FREQUENCY = 50;
+    let lastX: number | null = null;
+    let lastY: number | null = null;
+    let lastPointer = 0;
 
-        if (lastX === null || lastY === null) {
+    if (window.matchMedia('(pointer: fine)').matches) {
+      host.parentElement?.addEventListener(
+        'pointermove',
+        (e) => {
+          if (e.pointerType !== 'mouse') return;
+          lastPointer = performance.now();
+          const rect = host.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          if (lastX === null || lastY === null) {
+            lastX = x;
+            lastY = y;
+            return;
+          }
+          if (Math.hypot(x - lastX, y - lastY) < FREQUENCY) return;
           lastX = x;
           lastY = y;
-          return;
-        }
-        if (Math.hypot(x - lastX, y - lastY) < FREQUENCY) return;
-        lastX = x;
-        lastY = y;
-        spawn(x, y);
-      },
-      { passive: true }
-    );
-  }
+          spawn(x, y, false);
+        },
+        { passive: true }
+      );
+    }
+
+    /* --- Ambient ---------------------------------------------------------- */
+    const title = host.parentElement?.querySelector<HTMLElement>('[data-hero-title]');
+    let heroVisible = true;
+
+    onScroll = () => {
+      heroVisible = window.scrollY < window.innerHeight * 0.85;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    /** A random point in the hero that keeps the whole image clear of the
+        title, the menu bar above and the scroll badge below. */
+    const freeSpot = () => {
+      const box = host.getBoundingClientRect();
+      /* The heading is a full-width block; what must stay clear is the
+         wording itself, so take the union of its word boxes. */
+      const words = title ? [...title.querySelectorAll<HTMLElement>('.tok')] : [];
+      const t = words.length
+        ? words.reduce(
+            (u, w) => {
+              const r = w.getBoundingClientRect();
+              return {
+                left: Math.min(u.left, r.left),
+                right: Math.max(u.right, r.right),
+                top: Math.min(u.top, r.top),
+                bottom: Math.max(u.bottom, r.bottom),
+              };
+            },
+            { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity }
+          )
+        : title?.getBoundingClientRect();
+      const small = window.matchMedia('(max-width: 809.98px)').matches;
+      const halfW = small ? 60 : 90;
+      const halfH = small ? 77 : 115;
+      const xMin = halfW + 16;
+      const xMax = box.width - halfW - 16;
+      const yMin = 96 + halfH; // under the header
+      const yMax = box.height - 150 - halfH; // above the badge
+      if (xMax <= xMin || yMax <= yMin) return null;
+      for (let tries = 0; tries < 16; tries++) {
+        const x = xMin + Math.random() * (xMax - xMin);
+        const y = yMin + Math.random() * (yMax - yMin);
+        if (!t) return { x, y };
+        const padX = halfW + 24;
+        const padY = halfH + 24;
+        const inside =
+          x > t.left - box.left - padX &&
+          x < t.right - box.left + padX &&
+          y > t.top - box.top - padY &&
+          y < t.bottom - box.top + padY;
+        if (!inside) return { x, y };
+      }
+      return null;
+    };
+
+    ambientTimer = window.setInterval(() => {
+      if (document.hidden || !heroVisible) return;
+      // Leave the stage to the reader while they are drawing a trail.
+      if (performance.now() - lastPointer < 2500) return;
+      const spot = freeSpot();
+      if (spot) spawn(spot.x, spot.y, true);
+    }, 1100);
   };
 
   /* Only via the event: ClientRouter fires `astro:page-load` on the first
-     load as well as after each navigation. Calling init() directly too would
-     bind every listener twice, and paired handlers would cancel each other. */
+     load as well as after each navigation. */
   document.addEventListener('astro:page-load', init);
 </script>

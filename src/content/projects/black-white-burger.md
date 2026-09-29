@@ -8,7 +8,6 @@ services:
   - "Direction Artistique"
   - "Édition"
 order: 6
-featured: true
 cover: "../../assets/images/black-white-burger-cover.jpg"
 thumb: "../../assets/images/black-white-burger-01.jpg"
 strip:

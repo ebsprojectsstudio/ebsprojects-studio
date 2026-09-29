@@ -1,5 +1,16 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection, reference, z } from 'astro:content';
 import { glob } from 'astro/loaders';
+
+/** The seven expertises, spelled exactly as the expertise pages expect. */
+export const SERVICES = [
+  'Direction Artistique',
+  'Identité Visuelle',
+  'Illustration',
+  'Digital',
+  'Packaging',
+  'Édition',
+  'Signalétique',
+] as const;
 
 const projects = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/projects' }),
@@ -9,17 +20,17 @@ const projects = defineCollection({
       title: z.string(),
       client: z.string(),
       location: z.string(),
-      services: z.array(z.string()).nonempty(),
+      /** Restricted to the known list: a misspelt label would silently drop
+          the project from its expertise page. */
+      services: z.array(z.enum(SERVICES)).nonempty(),
       /** Position in the full projects grid. */
       order: z.number(),
-      /** Shown in "Selected projects" on the home page. */
-      featured: z.boolean().default(false),
-      /** 4:3-ish crop used in the projects grid. */
+      /** Crop used in the projects grid and on the home page. */
       cover: image(),
       /** Alternate crop used in the expertise listings. */
       thumb: image(),
-      /** The three images in the clipped, centred band at the top. */
-      strip: z.array(image()).length(3),
+      /** The scrolling band at the top of the project page. */
+      strip: z.array(image()).min(1),
       /** The grid below it. Each slot's span and crop ratio were measured on
           the original site — they are imposed by the layout, not the image. */
       grid: z
@@ -46,8 +57,31 @@ const expertises = defineCollection({
     index: z.string(),
     order: z.number(),
     /** Must match the label used in project `services`. */
-    service: z.string(),
+    service: z.enum(SERVICES),
   }),
 });
 
-export const collections = { projects, expertises };
+/**
+ * Editorial choices for the home page, kept apart from the projects
+ * themselves so the studio can change what is featured without touching a
+ * project's own page.
+ */
+const pages = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/pages' }),
+  schema: ({ image }) =>
+    z.object({
+      /** "Selected projects", in display order. */
+      selected: z.array(reference('projects')).min(1),
+      /** The slideshow above the footer: a project, and the photograph shown for it. */
+      slider: z
+        .array(
+          z.object({
+            project: reference('projects'),
+            image: image(),
+          })
+        )
+        .min(1),
+    }),
+});
+
+export const collections = { projects, expertises, pages };

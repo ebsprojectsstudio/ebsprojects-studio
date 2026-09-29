@@ -5,7 +5,6 @@ location: "Paris"
 services:
   - "Édition"
 order: 8
-featured: true
 cover: "../../assets/images/adidas-prophere-04.jpg"
 thumb: "../../assets/images/adidas-prophere-04.jpg"
 strip:

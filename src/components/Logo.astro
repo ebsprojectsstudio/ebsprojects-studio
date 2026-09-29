@@ -1,37 +1,34 @@
 ---
+/**
+ * The studio mark, from the original site's own asset (459x177, white on
+ * transparent). The original shows it at 60x23; it is set larger here, at
+ * the studio's request.
+ */
+import { url } from '../lib/url';
+
 interface Props {
-  /** Renders the mark at footer scale rather than header scale. */
-  large?: boolean;
   class?: string;
 }
-const { large = false, class: className = '' } = Astro.props;
+const { class: className } = Astro.props;
 ---
 
-<span class:list={['logo', { 'logo--large': large }, className]} aria-label="ebs:projects.studio">
-  <span class="logo__line">ēbs:</span>
-  <span class="logo__line">projects</span>
-</span>
+<img
+  class:list={['logo', className]}
+  src={url('/brand/logo.png')}
+  alt="ebs:projects"
+  width="459"
+  height="177"
+  decoding="async"
+/>
 
 <style>
   .logo {
-    display: inline-flex;
-    flex-direction: column;
-    font-size: 0.75rem;
-    font-weight: 600;
-    line-height: 1.08;
-    letter-spacing: -0.01em;
-    text-transform: lowercase;
-    white-space: nowrap;
-  }
-
-  .logo--large {
-    font-size: clamp(1.75rem, 6vw, 3.25rem);
-    font-weight: 500;
-    line-height: 1;
-    letter-spacing: -0.05em;
-  }
-
-  .logo__line {
     display: block;
+    width: auto;
+    height: 32px;
+  }
+
+  @media (max-width: 809.98px) {
+    .logo { height: 27px; }
   }
 </style>

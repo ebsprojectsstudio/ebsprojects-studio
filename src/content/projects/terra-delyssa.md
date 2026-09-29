@@ -6,7 +6,6 @@ services:
   - "Illustration"
   - "Édition"
 order: 5
-featured: true
 cover: "../../assets/images/terra-delyssa-07.jpg"
 thumb: "../../assets/images/terra-delyssa-01.jpg"
 strip:

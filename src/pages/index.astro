@@ -6,92 +6,109 @@ import ProjectCard from '../components/ProjectCard.astro';
 import Reveal from '../components/Reveal.astro';
 import SplitText from '../components/SplitText.astro';
 import ImageTrail from '../components/ImageTrail.astro';
-import { site, process, serviceSlugs } from '../data/site';
+import { site, process } from '../data/site';
 import { url } from '../lib/url';
 
-const projects = await getCollection('projects');
-const byOrder = [...projects].sort((a, b) => a.data.order - b.data.order);
+/* What is featured on the home page is chosen in the CMS
+   (src/content/pages/home.md), not flagged on each project. */
+const home = await getEntry('pages', 'home');
+if (!home) throw new Error('src/content/pages/home.md is missing');
 
-const featured = byOrder.filter((p) => p.data.featured).slice(0, 4);
+const projects = await getCollection('projects');
+const byId = new Map(projects.map((p) => [p.id, p]));
+const pick = (id: string) => {
+  const p = byId.get(id);
+  if (!p) throw new Error(`home.md names a project that does not exist: "${id}"`);
+  return p;
+};
+
+const selected = home.data.selected.map((ref) => pick(ref.id));
+const slides = home.data.slider.map((s) => ({ project: pick(s.project.id), image: s.image }));
 
 const expertises = (await getCollection('expertises')).sort((a, b) => a.data.order - b.data.order);
 const expertiseBodies = await Promise.all(
   expertises.map(async (e) => ({ entry: e, Content: (await render(e)).Content }))
 );
-
-/** The auto-playing showcase near the foot of the page — three slides,
-    matching the original. */
-const showcaseSlugs = ['adidas-collection-prophere', 'beer-factory', 'epeda-collection-dedicace'];
-const showcase = showcaseSlugs
-  .map((slug) => byOrder.find((p) => p.id === slug))
-  .filter((p): p is NonNullable<typeof p> => Boolean(p));
 ---
 
 <Base>
-  {/* ---------------------------------------------------------------- Hero */}
-  <section class="hero">
-    <ImageTrail />
+  {/*
+    The hero is pinned while "Selected projects" slides up over it like a
+    curtain, blurring as it goes — both measured off the original.
+  */}
+  <div class="curtain">
+    {/* -------------------------------------------------------------- Hero */}
+    <section class="hero" data-hero>
+      <div class="hero__stage">
+        <ImageTrail />
 
-    <div class="wrap hero__inner">
-      <h1 class="display hero__title">
-        <SplitText text="Creative" preset="heroTitle" class="hero__line" />
-        <SplitText text="Design Studio" preset="heroTitle" indexOffset={1} class="hero__line" />
-      </h1>
-      <p class="hero__sub"><SplitText text={site.subtitle} preset="heroSubtitle" /></p>
-    </div>
+        <div class="wrap hero__inner">
+          <h1 class="display hero__title" data-hero-title>
+            <SplitText text="Creative" preset="heroTitle" class="hero__line" />
+            <SplitText text="Design Studio" preset="heroTitle" indexOffset={1} class="hero__line" />
+          </h1>
+          <p class="hero__sub"><SplitText text={site.subtitle} preset="heroSubtitle" /></p>
+        </div>
 
-    <a class="badge" href="#work" aria-label="Faire défiler vers les projets">
-      <svg class="badge__ring" viewBox="0 0 100 100" aria-hidden="true">
-        <defs>
-          <path id="badge-arc" d="M50,50 m-34,0 a34,34 0 1,1 68,0 a34,34 0 1,1 -68,0" />
-        </defs>
-        <text>
-          <textPath href="#badge-arc" startOffset="0">
-            Welcolme • Discover • Scroll •&nbsp;
-          </textPath>
-        </text>
-      </svg>
-    </a>
-  </section>
-
-  {/* ----------------------------------------------------- Selected work */}
-  <section class="section" id="work">
-    <div class="wrap">
-      <Reveal class="section-head">
-        <SplitText as="h2" text="Selected projects" class="label--section" />
-        <a class="link" href={url('/projects')}>
-          Voir tous les projets
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-            <path d="M1 9L9 1M9 1H3M9 1v6" stroke="currentColor" stroke-width="1.2" />
+        <a class="badge" href="#work" aria-label="Faire défiler vers les projets">
+          <svg class="badge__ring" viewBox="0 0 100 100" aria-hidden="true">
+            <defs>
+              <path id="badge-arc" d="M50,50 m-34,0 a34,34 0 1,1 68,0 a34,34 0 1,1 -68,0" />
+            </defs>
+            <text>
+              <textPath href="#badge-arc" startOffset="0">
+                Welcolme • Discover • Scroll •&nbsp;
+              </textPath>
+            </text>
           </svg>
         </a>
-      </Reveal>
-
-      <div class="grid">
-        {
-          featured.map((p, i) => (
-            <Reveal delay={(i % 2) * 0.08}>
-              <ProjectCard
-                href={url(`/projects/${p.id}`)}
-                title={p.data.title}
-                services={p.data.services}
-                image={p.data.cover}
-                variant="stacked"
-                priority={i < 2}
-              />
-            </Reveal>
-          ))
-        }
       </div>
-    </div>
-  </section>
+    </section>
+
+    {/* --------------------------------------------------- Selected work */}
+    <section class="section work" id="work">
+      <div class="wrap">
+        <Reveal class="section-head">
+          <SplitText as="h2" text="Selected projects" class="label--section" />
+          <a class="link" href={url('/projects')}>
+            Voir tous les projets
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+              <path d="M1 9L9 1M9 1H3M9 1v6" stroke="currentColor" stroke-width="1.2" />
+            </svg>
+          </a>
+        </Reveal>
+
+        <div class="grid">
+          {
+            selected.map((p, i) => (
+              <Reveal delay={(i % 2) * 0.08}>
+                <ProjectCard
+                  href={url(`/projects/${p.id}`)}
+                  title={p.data.title}
+                  services={p.data.services}
+                  image={p.data.cover}
+                  variant="stacked"
+                  priority={i < 2}
+                />
+              </Reveal>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+  </div>
 
   {/* ------------------------------------------------------- Expertises */}
   <section class="section expertises r-sect" id="expertises" data-reveal>
     <div class="wrap">
       <Reveal class="section-head">
         <SplitText as="h2" text="Expertises" class="label--section" />
-        <p class="expertises__hint">Faites défiler →</p>
+        <button class="expertises__hint" type="button" data-rail-hint>
+          <span data-rail-hint-label>Faites défiler</span>
+          <svg width="12" height="9" viewBox="0 0 12 9" fill="none" aria-hidden="true">
+            <path d="M0 4.5h10.5M7 1l3.5 3.5L7 8" stroke="currentColor" stroke-width="1.1" />
+          </svg>
+        </button>
       </Reveal>
     </div>
 
@@ -137,12 +154,12 @@ const showcase = showcaseSlugs
   <section class="section" id="process">
     <div class="wrap">
       <Reveal>
-        <SplitText as="h2" text={"Comment se déroule un projet\u00A0?"} class="label--section process__heading" />
+        <SplitText as="h2" text={"Comment se déroule un projet ?"} class="label--section process__heading" />
       </Reveal>
 
       <div class="process">
         {
-          process.map((step, i) => (
+          process.map((step) => (
             <Reveal class="r-30">
               <details class="step" name="process">
                 <summary class="step__summary">
@@ -170,17 +187,19 @@ const showcase = showcaseSlugs
         <div class="slider" data-slider>
           <div class="slider__track" data-slider-track>
             {
-              showcase.map((p, i) => (
+              slides.map(({ project: p, image }, i) => (
                 <a class="slide" href={url(`/projects/${p.id}`)} data-slide aria-hidden={i > 0 ? 'true' : undefined}>
-                  <Image
-                    src={p.data.strip[0]}
-                    alt={p.data.title}
-                    widths={[800, 1280, 1920, 2560, 3200]}
-                    quality={85}
-                    sizes="(max-width: 809px) 96vw, 88vw"
-                    loading="lazy"
-                    data-fade
-                  />
+                  <span class="slide__zoom">
+                    <Image
+                      src={image}
+                      alt={p.data.title}
+                      widths={[800, 1280, 1920, 2560, 3200]}
+                      quality={85}
+                      sizes="(max-width: 809px) 96vw, 90vw"
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                      data-fade
+                    />
+                  </span>
                   <span class="slide__meta">
                     <span class="slide__title">{p.data.title}</span>
                     <span class="slide__services">/ {p.data.services.join(' / ')}</span>
@@ -191,15 +210,15 @@ const showcase = showcaseSlugs
           </div>
 
           <a class="slider__all link" href={url('/projects')}>
-            Voir tous les projets
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
               <path d="M1 9L9 1M9 1H3M9 1v6" stroke="currentColor" stroke-width="1.2" />
             </svg>
+            Voir tous les projets
           </a>
 
           <div class="slider__dots" role="tablist" aria-label="Projets mis en avant">
             {
-              showcase.map((p, i) => (
+              slides.map(({ project: p }, i) => (
                 <button
                   class="slider__dot"
                   type="button"
@@ -219,15 +238,29 @@ const showcase = showcaseSlugs
 </Base>
 
 <style>
-  /* --- Hero -------------------------------------------------------------- */
+  /* --- Curtain: hero pinned, grey section slides over it ------------------ */
+
+  .curtain { position: relative; }
 
   .hero {
+    position: sticky;
+    top: 0;
+    z-index: 0;
+    height: 100svh;
+    min-height: 560px;
+    overflow: hidden;
+  }
+
+  /* Blurred and dimmed as the page scrolls; --hp (0 -> 1) is set by script. */
+  .hero__stage {
     position: relative;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: 100svh;
-    padding-block: 8rem 7rem;
+    height: 100%;
+    filter: blur(calc(var(--hp, 0) * 14px));
+    opacity: calc(1 - var(--hp, 0) * 0.45);
+    transform: scale(calc(1 - var(--hp, 0) * 0.03));
   }
 
   .hero__inner {
@@ -286,8 +319,16 @@ const showcase = showcaseSlugs
     to { transform: rotate(360deg); }
   }
 
+  /* The grey panel that rises over the pinned hero (#1B1B1C on the original). */
+  .work {
+    position: relative;
+    z-index: 1;
+    background: var(--bg-panel);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .badge__ring { animation: none; }
+    .hero__stage { filter: none; opacity: 1; transform: none; }
   }
 
   /* --- Grid -------------------------------------------------------------- */
@@ -309,11 +350,24 @@ const showcase = showcaseSlugs
   #process { padding-top: clamp(1.5rem, 3vw, 2.5rem); }
 
   .expertises__hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55em;
+    padding: 0.35rem 0;
+    background: none;
+    border: 0;
     font-size: var(--fs-label);
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--fg-dim);
+    cursor: pointer;
+    transition: color 0.3s var(--ease);
   }
+  .expertises__hint:hover { color: var(--fg); }
+  .expertises__hint svg { transition: transform 0.45s var(--ease); }
+  .expertises__hint:hover svg { transform: translateX(4px); }
+  .expertises__hint[data-back] svg { transform: scaleX(-1); }
+  .expertises__hint[data-back]:hover svg { transform: scaleX(-1) translateX(4px); }
 
   .rail-wrap { position: relative; }
 
@@ -330,10 +384,8 @@ const showcase = showcaseSlugs
   }
   .rail::-webkit-scrollbar { display: none; }
 
-  .rail__item {
-    /* 257px wide with a 60px gap, as measured on the original. */
-    flex: 0 0 clamp(215px, 17.85vw, 300px);
-  }
+  /* 257px, whatever the window width — measured at 1440 and 1726. */
+  .rail__item { flex: 0 0 257px; }
 
   .expertise {
     display: flex;
@@ -343,23 +395,23 @@ const showcase = showcaseSlugs
   }
 
   .expertise__index {
-    font-size: var(--fs-label);
-    letter-spacing: 0.06em;
-    color: var(--fg-dim);
+    font-size: 0.8125rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.6);
     margin-bottom: 0.5rem;
   }
 
   .expertise__title {
-    font-size: 1.0625rem;
+    font-size: 1.125rem;
     font-weight: 400;
-    letter-spacing: -0.015em;
     margin-bottom: 1.15rem;
     transition: opacity 0.35s var(--ease);
   }
 
   .expertise__body {
     font-size: 0.875rem;
-    font-weight: 300;
+    font-weight: 400;
     line-height: 1.6;
     color: var(--fg-muted);
     flex: 1;
@@ -416,6 +468,7 @@ const showcase = showcaseSlugs
   .process__heading {
     display: block;
     max-width: none;
+    font-weight: 500;
     margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
   }
 
@@ -453,16 +506,16 @@ const showcase = showcaseSlugs
 
   .step__index {
     flex: none;
-    font-size: 1rem;
+    font-size: 1.125rem;
     line-height: 1;
     color: var(--fg);
   }
 
+  /* 18px on the original, whatever the window width. */
   .step__title {
     flex: 1;
-    font-size: clamp(1rem, 1.9vw, 1.4rem);
+    font-size: 1.125rem;
     font-weight: 400;
-    letter-spacing: -0.02em;
   }
 
   .step__icon {
@@ -500,7 +553,10 @@ const showcase = showcaseSlugs
     max-width: 68ch;
   }
 
-  .step__inner > p { padding-bottom: clamp(1.25rem, 2.5vw, 1.85rem); }
+  .step__inner > p {
+    padding-bottom: clamp(1.25rem, 2.5vw, 1.85rem);
+    font-size: 0.9375rem;
+  }
 
   @media (prefers-reduced-motion: reduce) {
     .step__panel { transition: none; }
@@ -516,13 +572,21 @@ const showcase = showcaseSlugs
 
   .slider { position: relative; }
 
+  /* 793px tall at desktop widths, the width simply filling the page — the
+     original keeps the height fixed, so it grows wider, not taller. */
   .slider__track {
     position: relative;
-    /* 1265 x 793 on the original — not a letterbox. */
-    aspect-ratio: 1265 / 793;
+    height: 793px;
     overflow: hidden;
     background: var(--bg-raised);
-    border-radius: 2px;
+  }
+
+  @media (max-width: 1199.98px) {
+    .slider__track { height: 62vw; }
+  }
+
+  @media (max-width: 809.98px) {
+    .slider__track { height: auto; aspect-ratio: 4 / 3; }
   }
 
   .slide {
@@ -530,7 +594,7 @@ const showcase = showcaseSlugs
     inset: 0;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.6s var(--spring-smooth);
+    transition: opacity 0.7s var(--spring-smooth);
   }
 
   .slide[data-active] {
@@ -538,33 +602,51 @@ const showcase = showcaseSlugs
     pointer-events: auto;
   }
 
+  /* Each photograph settles from slightly large as its slide comes in. */
+  .slide__zoom {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform: scale(1.08);
+    transition: transform 1.6s var(--spring-smooth);
+  }
+
+  .slide[data-active] .slide__zoom { transform: scale(1); }
+  .slide[data-active]:hover .slide__zoom { transform: scale(1.03); }
+
   .slide :global(img) {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* The original holds the image slightly larger than its frame. */
-    scale: 1.1;
   }
 
   .slide__meta {
     position: absolute;
-    top: clamp(1rem, 2vw, 1.75rem);
-    left: clamp(1rem, 2vw, 1.75rem);
+    top: 28px;
+    left: 32px;
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
-    font-size: var(--fs-label);
-    letter-spacing: 0.02em;
-    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
+    gap: 0.2rem;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
   }
 
-  .slide__services { color: rgba(255, 255, 255, 0.72); }
+  .slide__title {
+    font-size: 1.125rem;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  .slide__services {
+    font-size: 1rem;
+    letter-spacing: 0.01em;
+    color: rgba(255, 255, 255, 0.7);
+  }
 
   .slider__all {
     position: absolute;
-    top: clamp(1rem, 2vw, 1.75rem);
-    right: clamp(1rem, 2vw, 1.75rem);
-    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
+    top: 30px;
+    right: 32px;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
   }
 
   .slider__dots {
@@ -590,22 +672,26 @@ const showcase = showcaseSlugs
   .slider__dot[aria-selected='true'] { background: var(--fg); }
 
   @media (max-width: 809.98px) {
+    .slide__meta { top: 16px; left: 16px; }
+    .slide__title { font-size: 1rem; }
+    .slide__services { font-size: 0.875rem; }
+    .slider__all { display: none; }
     .slider__dots { bottom: 20px; }
   }
-
 </style>
 
 <script>
-  /* One handle on the live slider, reassigned by each init(). Document-level
-     listeners are registered once here rather than inside init(): bound in
-     there, every navigation would add another closure holding a dead slider,
-     and those stale handlers would stop the timer of the live one. */
+  /* Module-level handles, so document- and window-level listeners are bound
+     once and never pile up across client-side navigations. */
   let sliderTimer = 0;
   let current: { play: () => void; stop: () => void } = { play: () => {}, stop: () => {} };
+  let heroScroll: (() => void) | null = null;
 
   document.addEventListener('astro:before-swap', () => {
     current.stop();
     current = { play: () => {}, stop: () => {} };
+    if (heroScroll) window.removeEventListener('scroll', heroScroll);
+    heroScroll = null;
   });
 
   document.addEventListener('visibilitychange', () => {
@@ -614,6 +700,19 @@ const showcase = showcaseSlugs
   });
 
   const init = () => {
+  /* --- Hero: blur as the grey panel rises over it ------------------------- */
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
+  if (hero && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (heroScroll) window.removeEventListener('scroll', heroScroll);
+    heroScroll = () => {
+      const h = window.innerHeight || 1;
+      const p = Math.min(Math.max(window.scrollY / h, 0), 1);
+      hero.style.setProperty('--hp', p.toFixed(3));
+    };
+    window.addEventListener('scroll', heroScroll, { passive: true });
+    heroScroll();
+  }
+
   /* --- Process accordion --------------------------------------------------
      <details> drops its content the instant `open` goes away, so the element
      is kept open until the closing tween has run. ------------------------- */
@@ -655,41 +754,52 @@ const showcase = showcaseSlugs
     });
   });
 
-  /* --- Expertises rail: wheel + arrow navigation --------------------------- */
+  /* --- Expertises rail: hint, wheel and arrows ------------------------------ */
   const rail = document.querySelector<HTMLElement>('[data-rail]');
   const prev = document.querySelector<HTMLButtonElement>('[data-rail-prev]');
   const next = document.querySelector<HTMLButtonElement>('[data-rail-next]');
+  const hint = document.querySelector<HTMLButtonElement>('[data-rail-hint]');
+  const hintLabel = document.querySelector<HTMLElement>('[data-rail-hint-label]');
 
   if (rail) {
+    /** One column plus its gap. */
     const step = () => {
       const item = rail.querySelector<HTMLElement>('.rail__item');
-      return item ? item.getBoundingClientRect().width : rail.clientWidth * 0.8;
+      return item ? item.getBoundingClientRect().width + 60 : rail.clientWidth * 0.8;
     };
+    const atEnd = () => Math.ceil(rail.scrollLeft + rail.clientWidth) >= rail.scrollWidth - 2;
 
-    const syncArrows = () => {
-      const atStart = rail.scrollLeft <= 2;
-      const atEnd = Math.ceil(rail.scrollLeft + rail.clientWidth) >= rail.scrollWidth - 2;
-        prev?.toggleAttribute('hidden', atStart);
-      next?.toggleAttribute('hidden', atEnd);
+    const sync = () => {
+      const start = rail.scrollLeft <= 2;
+      const end = atEnd();
+      prev?.toggleAttribute('hidden', start);
+      next?.toggleAttribute('hidden', end);
+      // Once the last column is in view, the hint offers the way back.
+      hint?.toggleAttribute('data-back', end);
+      if (hintLabel) hintLabel.textContent = end ? 'Revenir au début' : 'Faites défiler';
     };
 
     prev?.addEventListener('click', () => rail.scrollBy({ left: -step(), behavior: 'smooth' }));
     next?.addEventListener('click', () => rail.scrollBy({ left: step(), behavior: 'smooth' }));
-    rail.addEventListener('scroll', syncArrows, { passive: true });
-    window.addEventListener('resize', syncArrows, { passive: true });
+    hint?.addEventListener('click', () => {
+      if (atEnd()) rail.scrollTo({ left: 0, behavior: 'smooth' });
+      else rail.scrollBy({ left: step() * 2, behavior: 'smooth' });
+    });
+
+    rail.addEventListener('scroll', sync, { passive: true });
+    window.addEventListener('resize', sync, { passive: true });
     // Fonts and images settle after first paint and change scrollWidth.
-    window.addEventListener('load', syncArrows, { once: true });
-    syncArrows();
+    window.addEventListener('load', sync, { once: true });
+    sync();
 
     if (window.matchMedia('(pointer: fine)').matches) {
       rail.addEventListener(
         'wheel',
         (e) => {
           if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
-          const atStart = rail.scrollLeft <= 0;
-          const atEnd = Math.ceil(rail.scrollLeft + rail.clientWidth) >= rail.scrollWidth;
+          const start = rail.scrollLeft <= 0;
           // Let the page keep scrolling once the rail reaches either end.
-          if ((atStart && e.deltaY < 0) || (atEnd && e.deltaY > 0)) return;
+          if ((start && e.deltaY < 0) || (atEnd() && e.deltaY > 0)) return;
           e.preventDefault();
           rail.scrollLeft += e.deltaY;
         },
@@ -714,13 +824,15 @@ const showcase = showcaseSlugs
         s.setAttribute('aria-hidden', n === index ? 'false' : 'true');
       });
       dots.forEach((d, n) => d.setAttribute('aria-selected', n === index ? 'true' : 'false'));
+      // The next slide's photograph is needed within three seconds.
+      slides[(index + 1) % slides.length]?.querySelector('img')?.setAttribute('loading', 'eager');
     };
 
     /* Still advances when motion is reduced — the cross-fade is what gets
        suppressed there, by the global transition override, not the rotation. */
     const play = () => {
       stop();
-      sliderTimer = window.setInterval(() => go(index + 1), INTERVAL);
+      if (slides.length > 1) sliderTimer = window.setInterval(() => go(index + 1), INTERVAL);
     };
     const stop = () => {
       if (sliderTimer) clearInterval(sliderTimer);

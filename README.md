@@ -56,11 +56,41 @@ public/
 
 ## Modifier le contenu
 
-### Ajouter un projet
+### Sans toucher au code : l'interface d'édition
 
-1. Déposer les images dans `src/assets/images/`, nommées `mon-projet-01.jpg`,
-   `mon-projet-02.jpg`, etc.
-2. Créer `src/content/projects/mon-projet.md` :
+Le site a une interface d'administration à l'adresse **`/admin`**
+(pendant la phase de test : <https://seguinhugo06-lgtm.github.io/ebsprojects-studio/admin/>).
+Elle s'appuie sur [Sveltia CMS](https://sveltiacms.app) et permet de :
+
+- **ajouter, modifier ou supprimer un projet** — textes, expertises, photos du
+  bandeau, galerie avec la largeur et le recadrage de chaque image, liens ;
+- **choisir les projets de l'accueil** (« Selected projects ») et leur ordre ;
+- **composer le diaporama** du bas de l'accueil : un projet et la photo à
+  montrer pour lui.
+
+Chaque enregistrement crée un commit sur GitHub ; le site se reconstruit et se
+republie tout seul en une à deux minutes. Les photos envoyées sont converties
+en WebP et ramenées à 3200 px au plus.
+
+**Connexion.** Il faut un compte GitHub ayant les droits d'écriture sur le
+dépôt `seguinhugo06-lgtm/ebsprojects-studio`. Sur l'écran de connexion,
+choisir *Sign In with Token* : un lien ouvre GitHub avec les bonnes
+autorisations déjà cochées (*Contents : Read and write* sur ce seul dépôt).
+Le jeton est ensuite mémorisé par le navigateur.
+
+Pour qu'Elina ait son propre accès : elle crée un compte GitHub, et le
+propriétaire du dépôt l'ajoute dans *Settings → Collaborators*.
+
+### À la main
+
+Les fiches sont des fichiers Markdown :
+
+- `src/content/projects/*.md` — un fichier par projet ; le nom du fichier
+  donne l'adresse (`mon-projet.md` → `/projects/mon-projet`) ;
+- `src/content/pages/home.md` — les projets de l'accueil et le diaporama ;
+- `src/content/expertises/*.md` — les sept expertises.
+
+Exemple de projet :
 
 ```markdown
 ---
@@ -71,12 +101,22 @@ services:
   - "Direction Artistique"
   - "Édition"
 order: 9
-featured: false
 cover: "../../assets/images/mon-projet-01.jpg"
 thumb: "../../assets/images/mon-projet-02.jpg"
-gallery:
+strip:
   - "../../assets/images/mon-projet-01.jpg"
   - "../../assets/images/mon-projet-02.jpg"
+  - "../../assets/images/mon-projet-03.jpg"
+grid:
+  - src: "../../assets/images/mon-projet-04.jpg"
+    span: full
+    ratio: "1265 / 859"
+  - src: "../../assets/images/mon-projet-05.jpg"
+    span: half
+    ratio: "613 / 613"
+  - src: "../../assets/images/mon-projet-06.jpg"
+    span: half
+    ratio: "613 / 613"
 links:
   - label: "Behance"
     url: "https://…"
@@ -85,29 +125,22 @@ links:
 Le texte de présentation du projet.
 ```
 
-L'adresse du projet devient `/projects/mon-projet` — elle vient du nom du
-fichier. La page, la grille, les filtres par expertise et le plan du site se
-mettent à jour tout seuls.
+| Champ      | Rôle                                                                  |
+| ---------- | --------------------------------------------------------------------- |
+| `order`    | Position dans la page « All projects » (croissant)                    |
+| `cover`    | Image de la page Projets et de l'accueil                              |
+| `thumb`    | Image dans les pages d'expertise                                      |
+| `strip`    | Bandeau qui défile en haut de la page projet (une image ou plus)      |
+| `grid`     | Galerie : `span` `full` ou `half`, `ratio` = recadrage de l'image     |
+| `services` | Une ou plusieurs des sept expertises, orthographe exacte (voir plus bas) |
 
-Champs utiles :
-
-| Champ      | Rôle                                                              |
-| ---------- | ----------------------------------------------------------------- |
-| `order`    | Position dans la grille « All projects » (croissant)              |
-| `featured` | `true` pour apparaître dans « Selected projects » sur l'accueil    |
-| `cover`    | Image de la grille des projets                                    |
-| `thumb`    | Image dans les pages d'expertise                                  |
-| `gallery`  | Images de la page projet ; la première sert d'image d'en-tête     |
-| `services` | Doit reprendre exactement un libellé d'expertise (voir ci-dessous) |
+Le build refuse une expertise mal orthographiée ou un projet de l'accueil qui
+n'existe pas : l'erreur s'affiche au lieu que la page se vide en silence.
 
 ### Libellés d'expertise valides
 
 `Direction Artistique`, `Identité Visuelle`, `Illustration`, `Digital`,
 `Packaging`, `Édition`, `Signalétique`.
-
-Un projet apparaît automatiquement sur la page de chaque expertise citée dans
-`services`. Une faute de frappe dans un libellé fait simplement disparaître le
-projet de la page concernée — vérifier l'orthographe et les accents.
 
 ### Modifier les coordonnées, les clients, les étapes du projet
 

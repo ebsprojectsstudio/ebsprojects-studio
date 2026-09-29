@@ -1,0 +1,432 @@
+---
+import Base from '../layouts/Base.astro';
+import Reveal from '../components/Reveal.astro';
+import SplitText from '../components/SplitText.astro';
+import { contact, contactForm, socials, site } from '../data/site';
+import { SERVICES } from '../content.config';
+import { url } from '../lib/url';
+
+/* Without JavaScript the form posts normally and FormSubmit sends the visitor
+   back here; that return address has to be absolute. */
+const returnTo = new URL(`${url('/contact')}?envoye=1`, Astro.site ?? site.url).href;
+---
+
+<Base
+  title="Contact"
+  description="Parlons de votre projet : direction artistique, identité visuelle, édition, packaging. Studio de design graphique à Bordeaux."
+>
+  <section class="contact">
+    <div class="wrap">
+      <Reveal>
+        <p class="label--section contact__eyebrow">Contact</p>
+      </Reveal>
+
+      <div class="contact__layout">
+        <div class="contact__intro">
+          <SplitText as="h1" text="Parlons de votre projet" preset="heroTitle" class="title contact__title" />
+
+          <Reveal class="contact__lead" delay={0.1}>
+            <p class="lead">
+              Une identité à construire, une édition à mettre en page, un packaging à imaginer ? Racontez-moi
+              votre projet : je vous réponds sous 48 heures.
+            </p>
+          </Reveal>
+
+          <Reveal class="contact__details" delay={0.16}>
+            <dl>
+              <div>
+                <dt class="label">E-mail</dt>
+                <dd><a href={`mailto:${contact.email}`}>{contact.email}</a></dd>
+              </div>
+              <div>
+                <dt class="label">Téléphone</dt>
+                <dd><a href={`tel:${contact.phoneHref}`}>{contact.phoneDisplay}</a></dd>
+              </div>
+              <div>
+                <dt class="label">Studio</dt>
+                <dd>{contact.city}, {contact.country}</dd>
+              </div>
+            </dl>
+            <ul class="contact__socials">
+              {
+                socials.map((s) => (
+                  <li>
+                    <a class="link" href={s.url} target="_blank" rel="noopener noreferrer">
+                      {s.label}
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                        <path d="M1 9L9 1M9 1H3M9 1v6" stroke="currentColor" stroke-width="1.2" />
+                      </svg>
+                    </a>
+                  </li>
+                ))
+              }
+            </ul>
+          </Reveal>
+        </div>
+
+        <Reveal class="contact__panel" delay={0.12}>
+          <form class="form" action={contactForm.post} method="POST" data-contact-form>
+            {/* FormSubmit settings; the honeypot stays empty for humans. */}
+            <input type="hidden" name="_subject" value="Nouveau message depuis ebsprojects.studio" />
+            <input type="hidden" name="_template" value="table" />
+            <input type="hidden" name="_next" value={returnTo} />
+            <input type="text" name="_honey" class="form__trap" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+            <div class="form__row form__row--2">
+              <div class="field">
+                <label class="label" for="f-name">Nom <span aria-hidden="true">*</span></label>
+                <input id="f-name" name="name" type="text" autocomplete="name" required />
+              </div>
+              <div class="field">
+                <label class="label" for="f-email">E-mail <span aria-hidden="true">*</span></label>
+                <input id="f-email" name="email" type="email" autocomplete="email" required />
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label" for="f-company">Société ou marque</label>
+              <input id="f-company" name="company" type="text" autocomplete="organization" />
+            </div>
+
+            <fieldset class="field field--chips">
+              <legend class="label">Votre projet concerne</legend>
+              <div class="chips">
+                {
+                  [...SERVICES, 'Autre'].map((s) => (
+                    <label class="chip">
+                      <input type="checkbox" name="expertises" value={s} />
+                      <span>{s}</span>
+                    </label>
+                  ))
+                }
+              </div>
+            </fieldset>
+
+            <div class="field">
+              <label class="label" for="f-message">Votre message <span aria-hidden="true">*</span></label>
+              <textarea id="f-message" name="message" rows="6" required></textarea>
+            </div>
+
+            <div class="form__foot">
+              <p class="form__note">* Champs obligatoires. Vos informations servent uniquement à vous répondre.</p>
+              <button class="pill form__submit" type="submit" data-submit>
+                <span class="dot" aria-hidden="true"></span>
+                <span data-submit-label>Envoyer le message</span>
+              </button>
+            </div>
+
+            <p class="form__status" role="status" aria-live="polite" data-status></p>
+          </form>
+
+          <div class="thanks" data-thanks hidden tabindex="-1">
+            <p class="label--section">Message envoyé</p>
+            <p class="lead">Merci ! Votre message est bien parti. Je reviens vers vous très vite.</p>
+            <button class="link thanks__again" type="button" data-again>Envoyer un autre message</button>
+          </div>
+        </Reveal>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .contact { padding-block: clamp(8rem, 16vh, 11rem) var(--section-y); }
+
+  .contact__eyebrow { margin-bottom: clamp(1.5rem, 3vw, 2.5rem); color: var(--fg-dim); }
+
+  .contact__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    gap: clamp(3rem, 7vw, 8rem);
+    align-items: start;
+  }
+
+  .contact__title {
+    display: block;
+    max-width: 11ch;
+    margin-bottom: clamp(1.75rem, 3vw, 2.5rem);
+  }
+
+  .contact__lead .lead { max-width: 42ch; }
+
+  .contact__details { margin-top: clamp(2.5rem, 5vw, 4rem); }
+
+  .contact__details dl {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin: 0;
+  }
+
+  .contact__details dt { margin-bottom: 0.35rem; }
+  .contact__details dd { margin: 0; font-size: 1rem; }
+
+  .contact__details dd a {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.45s var(--ease);
+  }
+  .contact__details dd a:hover { background-size: 100% 1px; }
+
+  .contact__socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+
+  /* --- Form -------------------------------------------------------------- */
+
+  .contact__panel {
+    padding: clamp(1.5rem, 3vw, 2.75rem);
+    background: var(--bg-panel);
+    border: 1px solid var(--line-soft);
+  }
+
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.9rem;
+  }
+
+  .form__row--2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.9rem;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  .field input,
+  .field textarea {
+    width: 100%;
+    padding: 0.55rem 0 0.7rem;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    color: var(--fg);
+    font: inherit;
+    font-size: 1rem;
+    transition: border-color 0.35s var(--ease);
+  }
+
+  .field textarea {
+    min-height: 8rem;
+    resize: vertical;
+    line-height: 1.55;
+  }
+
+  /* The rule under each field brightens and thickens as it takes focus. */
+  .field input:hover,
+  .field textarea:hover { border-bottom-color: rgba(255, 255, 255, 0.3); }
+
+  .field input:focus,
+  .field textarea:focus {
+    outline: none;
+    border-bottom-color: var(--fg);
+    box-shadow: 0 1px 0 0 var(--fg);
+  }
+
+  .field input:focus-visible,
+  .field textarea:focus-visible { outline: none; }
+
+  .field:focus-within > .label,
+  .field:focus-within > legend { color: var(--fg); }
+
+  .label span { color: var(--fg-muted); }
+
+  /* Expertise chips — real checkboxes, styled as pills. */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+  }
+
+  .chip { position: relative; cursor: pointer; }
+
+  .chip input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+
+  .chip span {
+    display: inline-block;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 0.875rem;
+    color: var(--fg-muted);
+    transition: background-color 0.3s var(--ease), border-color 0.3s var(--ease), color 0.3s var(--ease),
+      scale var(--press);
+  }
+
+  .chip:hover span { border-color: rgba(255, 255, 255, 0.35); color: var(--fg); }
+  .chip:active span { scale: 0.96; }
+
+  .chip input:checked + span {
+    background: var(--fg);
+    border-color: var(--fg);
+    color: var(--bg);
+  }
+
+  .chip input:focus-visible + span {
+    outline: 2px solid var(--fg);
+    outline-offset: 3px;
+  }
+
+  .form__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .form__note {
+    max-width: 30ch;
+    font-size: 0.8125rem;
+    color: var(--fg-dim);
+  }
+
+  .form__submit {
+    flex: none;
+    padding: 0.8rem 1.35rem;
+    cursor: pointer;
+  }
+
+  .form__submit[disabled] { opacity: 0.55; cursor: progress; }
+
+  .form__status {
+    min-height: 1.2em;
+    font-size: 0.875rem;
+    color: #ff9c8a;
+  }
+
+  .form__trap {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
+  /* --- Thanks ------------------------------------------------------------ */
+
+  .thanks {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+    padding-block: 2rem;
+    animation: thanks-in 0.7s var(--spring-smooth) both;
+  }
+
+  .thanks[hidden] { display: none; }
+  .thanks:focus { outline: none; }
+
+  .thanks__again {
+    background: none;
+    border: 0;
+    padding: 0 0 2px;
+    cursor: pointer;
+  }
+
+  @keyframes thanks-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @media (max-width: 1199.98px) {
+    .contact__layout { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  @media (max-width: 809.98px) {
+    .form__row--2 { grid-template-columns: minmax(0, 1fr); }
+    .form__foot { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+
+<script>
+  import { contactForm } from '../data/site';
+
+  const init = () => {
+    const form = document.querySelector<HTMLFormElement>('[data-contact-form]');
+    const thanks = document.querySelector<HTMLElement>('[data-thanks]');
+    if (!form || !thanks) return;
+
+    const submit = form.querySelector<HTMLButtonElement>('[data-submit]')!;
+    const submitLabel = form.querySelector<HTMLElement>('[data-submit-label]')!;
+    const status = form.querySelector<HTMLElement>('[data-status]')!;
+
+    const showThanks = () => {
+      form.hidden = true;
+      thanks.hidden = false;
+      thanks.focus();
+    };
+
+    // Returning from the no-JavaScript path.
+    if (new URLSearchParams(location.search).has('envoye')) showThanks();
+
+    thanks.querySelector('[data-again]')?.addEventListener('click', () => {
+      form.reset();
+      thanks.hidden = true;
+      form.hidden = false;
+      form.querySelector<HTMLInputElement>('input[name="name"]')?.focus();
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!form.reportValidity()) return;
+
+      const data = new FormData(form);
+      // Bots fill every field; people never see this one.
+      if (data.get('_honey')) return;
+
+      const payload: Record<string, string> = {};
+      for (const [key, value] of data.entries()) {
+        if (key === '_next' || key === '_honey' || key === 'expertises') continue;
+        payload[key] = String(value);
+      }
+      const chosen = data.getAll('expertises').map(String);
+      if (chosen.length) payload.expertises = chosen.join(', ');
+
+      submit.disabled = true;
+      submitLabel.textContent = 'Envoi…';
+      status.textContent = '';
+
+      try {
+        const res = await fetch(contactForm.ajax, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok || String(body.success) !== 'true') throw new Error(body.message || res.statusText);
+        showThanks();
+      } catch {
+        status.textContent =
+          "Le message n'a pas pu partir. Réessayez dans un instant, ou écrivez directement à " +
+          form.action.split('/').pop() + '.';
+      } finally {
+        submit.disabled = false;
+        submitLabel.textContent = 'Envoyer le message';
+      }
+    });
+  };
+
+  document.addEventListener('astro:page-load', init);
+</script>

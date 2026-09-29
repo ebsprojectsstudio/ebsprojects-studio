@@ -9,7 +9,6 @@ services:
   - "Identité Visuelle"
   - "Illustration"
 order: 7
-featured: true
 cover: "../../assets/images/loft-babies-cover.jpg"
 thumb: "../../assets/images/loft-babies-thumb.jpg"
 strip:
