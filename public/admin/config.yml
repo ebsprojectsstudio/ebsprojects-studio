@@ -17,10 +17,11 @@ backend:
 site_url: https://ebsprojects.studio
 display_url: https://ebsprojects.studio
 
-# Photos : dans src/assets/images, référencées depuis les fiches par un
-# chemin relatif, comme l'exige Astro pour les optimiser au build.
+# Photos : dans src/assets/images. Au niveau global, Sveltia exige un
+# chemin absolu ; chaque collection le redéfinit ensuite en chemin relatif,
+# comme l'exige Astro pour optimiser les images au build.
 media_folder: /src/assets/images
-public_folder: ../../assets/images
+public_folder: /src/assets/images
 
 media_libraries:
   default:
