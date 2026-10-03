@@ -688,9 +688,15 @@ const statement =
     width: clamp(40px, 4vw, 60px);
     height: clamp(40px, 4vw, 60px);
     border-radius: 50%;
-    background: var(--fg);
-    color: var(--bg);
-    transition: transform 0.6s var(--spring-smooth);
+    /* A fine outline, filled on hover. */
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    background: transparent;
+    color: var(--fg);
+    transition:
+      transform 0.6s var(--spring-smooth),
+      background-color 0.4s var(--ease),
+      color 0.4s var(--ease),
+      border-color 0.4s var(--ease);
   }
 
   .cta__disc svg {
@@ -699,7 +705,7 @@ const statement =
     transition: transform 0.6s var(--spring-smooth);
   }
 
-  .cta__link:hover .cta__disc { transform: rotate(45deg); }
+  .cta__link:hover .cta__disc { transform: rotate(45deg); background: var(--fg); color: var(--bg); border-color: var(--fg); }
 
   .cta :global(.cta__direct) {
     display: flex;
