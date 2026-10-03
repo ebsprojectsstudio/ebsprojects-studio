@@ -230,8 +230,8 @@ collections:
           - name: selected
             label: Projets sélectionnés (« Selected projects »)
             hint: >-
-              Dans l'ordre d'affichage. Un nombre pair remplit mieux la grille
-              à deux colonnes.
+              Dans l'ordre d'affichage. Quatre projets forment la mosaïque de
+              l'accueil ; au-delà, la composition se répète.
             widget: relation
             collection: projects
             value_field: "{{slug}}"
