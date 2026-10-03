@@ -1,0 +1,257 @@
+---
+/**
+ * The slideshow of chosen projects (Page d'accueil > Diaporama in the CMS):
+ * one photograph per project, cross-fading every three seconds, paused under
+ * the cursor. Shared by both home pages.
+ */
+import { getCollection, getEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+import Reveal from './Reveal.astro';
+import ArrowLink from './ArrowLink.astro';
+import { url } from '../lib/url';
+
+const home = await getEntry('pages', 'home');
+if (!home) throw new Error('src/content/pages/home.md is missing');
+const projects = new Map((await getCollection('projects')).map((p) => [p.id, p]));
+const slides = home.data.slider.map((s) => {
+  const project = projects.get(s.project.id);
+  if (!project) throw new Error(`home.md names a project that does not exist: "${s.project.id}"`);
+  return { project, image: s.image };
+});
+---
+
+<section class="showcase">
+  <div class="wrap">
+    <Reveal>
+      <div class="slider" data-slider>
+        <div class="slider__track" data-slider-track>
+          {
+            slides.map(({ project: p, image }, i) => (
+              <a class="slide" href={url(`/projects/${p.id}`)} data-slide aria-hidden={i > 0 ? 'true' : undefined}>
+                <span class="slide__zoom">
+                  <Image
+                    src={image}
+                    alt={p.data.title}
+                    widths={[800, 1280, 1920, 2560, 3200]}
+                    quality={85}
+                    sizes="(max-width: 809px) 96vw, 90vw"
+                    loading={i === 0 ? 'eager' : 'lazy'}
+                    data-fade
+                  />
+                </span>
+                <span class="slide__meta">
+                  <span class="slide__title">{p.data.title}</span>
+                  <span class="slide__services">/ {p.data.services.join(' / ')}</span>
+                </span>
+              </a>
+            ))
+          }
+        </div>
+
+        <ArrowLink class="slider__all" href={url('/projects')}>Voir tous les projets</ArrowLink>
+
+        <div class="slider__dots" role="tablist" aria-label="Projets mis en avant">
+          {
+            slides.map(({ project: p }, i) => (
+              <button
+                class="slider__dot"
+                type="button"
+                role="tab"
+                data-slider-dot
+                aria-selected={i === 0 ? 'true' : 'false'}
+              >
+                <span class="visually-hidden">{p.data.title}</span>
+              </button>
+            ))
+          }
+        </div>
+      </div>
+    </Reveal>
+  </div>
+</section>
+
+<style>
+  /* --- Showcase slider --------------------------------------------------- */
+
+  .showcase { padding-bottom: var(--section-y); }
+
+  .slider { position: relative; }
+
+  /* 793px tall at desktop widths, the width simply filling the page — the
+     original keeps the height fixed, so it grows wider, not taller. */
+  .slider__track {
+    position: relative;
+    height: 793px;
+    overflow: hidden;
+    background: var(--bg-raised);
+  }
+
+  @media (max-width: 1199.98px) {
+    .slider__track { height: 62vw; }
+  }
+
+  @media (max-width: 809.98px) {
+    .slider__track { height: auto; aspect-ratio: 4 / 3; }
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.7s var(--spring-smooth);
+  }
+
+  .slide[data-active] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Each photograph settles from slightly large as its slide comes in. */
+  .slide__zoom {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform: scale(1.08);
+    transition: transform 1.6s var(--spring-smooth);
+  }
+
+  .slide[data-active] .slide__zoom { transform: scale(1); }
+  .slide[data-active]:hover .slide__zoom { transform: scale(1.03); }
+
+  .slide :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .slide__meta {
+    position: absolute;
+    top: 28px;
+    left: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
+  }
+
+  .slide__title {
+    font-size: 1.125rem;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  .slide__services {
+    font-size: 1rem;
+    letter-spacing: 0.01em;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .showcase :global(.slider__all) {
+    position: absolute;
+    top: 30px;
+    right: 32px;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
+  }
+
+  .slider__dots {
+    position: absolute;
+    left: 50%;
+    bottom: 73px;
+    translate: -50% 0;
+    display: flex;
+    gap: 8px;
+  }
+
+  .slider__dot {
+    width: 28px;
+    height: 6px;
+    padding: 0;
+    border: 0;
+    background: rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transition: background-color 0.4s var(--ease);
+  }
+
+  .slider__dot:hover { background: rgba(255, 255, 255, 0.55); }
+  .slider__dot[aria-selected='true'] { background: var(--fg); }
+
+  @media (max-width: 809.98px) {
+    .slide__meta { top: 16px; left: 16px; }
+    .slide__title { font-size: 1rem; }
+    .slide__services { font-size: 0.875rem; }
+    .showcase :global(.slider__all) { display: none; }
+    .slider__dots { bottom: 20px; }
+  }
+</style>
+
+<script>
+  /* Module-level handles, so document- and window-level listeners are bound
+     once and never pile up across client-side navigations. */
+  let sliderTimer = 0;
+  let current: { play: () => void; stop: () => void } = { play: () => {}, stop: () => {} };
+
+  document.addEventListener('astro:before-swap', () => {
+    current.stop();
+    current = { play: () => {}, stop: () => {} };
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) current.stop();
+    else current.play();
+  });
+
+  const init = () => {
+  /* --- Showcase slider ----------------------------------------------------- */
+  const slider = document.querySelector<HTMLElement>('[data-slider]');
+
+  if (slider) {
+    const slides = [...slider.querySelectorAll<HTMLElement>('[data-slide]')];
+    const dots = [...slider.querySelectorAll<HTMLButtonElement>('[data-slider-dot]')];
+    const INTERVAL = 3000;
+    let index = 0;
+
+    const go = (i: number) => {
+      index = (i + slides.length) % slides.length;
+      slides.forEach((s, n) => {
+        s.toggleAttribute('data-active', n === index);
+        s.setAttribute('aria-hidden', n === index ? 'false' : 'true');
+      });
+      dots.forEach((d, n) => d.setAttribute('aria-selected', n === index ? 'true' : 'false'));
+      // The next slide's photograph is needed within three seconds.
+      slides[(index + 1) % slides.length]?.querySelector('img')?.setAttribute('loading', 'eager');
+    };
+
+    /* Still advances when motion is reduced — the cross-fade is what gets
+       suppressed there, by the global transition override, not the rotation. */
+    const play = () => {
+      stop();
+      if (slides.length > 1) sliderTimer = window.setInterval(() => go(index + 1), INTERVAL);
+    };
+    const stop = () => {
+      if (sliderTimer) clearInterval(sliderTimer);
+      sliderTimer = 0;
+    };
+
+    dots.forEach((d, n) =>
+      d.addEventListener('click', () => {
+        go(n);
+        play();
+      })
+    );
+
+    // Don't advance under the reader's cursor.
+    slider.addEventListener('pointerenter', stop);
+    slider.addEventListener('pointerleave', play);
+
+    current = { play, stop };
+    go(0);
+    if (!document.hidden) play();
+  }
+  };
+
+  /* Only via the event: ClientRouter fires `astro:page-load` on the first
+     load as well as after each navigation. Calling init() directly too would
+     bind every listener twice, and paired handlers would cancel each other. */
+  document.addEventListener('astro:page-load', init);
+</script>
