@@ -60,8 +60,10 @@ const selected = home.data.selected.map((ref) => pick(ref.id));
 /** The photograph shown in the mosaic. */
 const main = (p: Project): ImageMetadata => p.data.homeImage ?? p.data.cover;
 
-/** A second photograph, shown when the card is hovered. */
+/** A second photograph, shown when the card is hovered: the one chosen in
+    the CMS, or else another photograph of the project. */
 const alt = (p: Project): ImageMetadata => {
+  if (p.data.homeHoverImage) return p.data.homeHoverImage;
   const pool = [p.data.cover, p.data.thumb, ...p.data.strip, ...p.data.grid.map((g) => g.src)];
   return pool.find((img) => img.src !== main(p).src) ?? main(p);
 };
@@ -92,7 +94,7 @@ const statement =
           {
             selected.map((p, i) => (
               <Reveal class="mosaic__item" delay={(i % 2) * 0.12} data-reveal-at="0.85">
-                <a class="scard" href={url(`/projects/${p.id}`)} data-peek>
+                <a class="scard" href={url(`/projects/${p.id}`)}>
                   <span class="swap scard__media">
                     <span class="swap__inner">
                     <Image
@@ -240,8 +242,6 @@ const statement =
       </details>
     )
   }
-  {/* Follows the cursor over a project (pointer devices only). */}
-  <div class="peek" data-peek-label aria-hidden="true">Voir</div>
 </Base>
 
 <style>
@@ -261,10 +261,19 @@ const statement =
     background: var(--bg-panel);
   }
 
-  /* The whole opening screen — title and the photographs around it —
-     fades out together, gone by the time the projects reach the middle. */
-  .curtain :global(.hero__stage) {
-    opacity: clamp(0, calc(1 - var(--hp, 0) * 1.4), 1);
+  /* No blur here: the opening screen — photographs and title — sinks into
+     black as the page scrolls, a veil that deepens until it is opaque by
+     the time the projects reach the middle of the screen. */
+  .curtain :global(.hero__stage) { filter: none; opacity: 1; }
+
+  .curtain :global([data-hero])::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    background: #000;
+    opacity: clamp(0, calc(var(--hp, 0) * 1.4), 1);
+    pointer-events: none;
   }
 
   .curtain :global(.hero__inner) {
@@ -521,34 +530,6 @@ const statement =
     .scard__services { max-width: none; text-align: left; }
   }
 
-  /* --- "Voir" label -------------------------------------------------------- */
-
-  .peek {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 50;
-    display: grid;
-    place-items: center;
-    width: 84px;
-    height: 84px;
-    border-radius: 50%;
-    background: var(--fg);
-    color: var(--bg);
-    font-size: var(--fs-label);
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    pointer-events: none;
-    opacity: 0;
-    scale: 0.4;
-    transition: opacity 0.3s var(--ease), scale 0.5s var(--spring-smooth);
-  }
-  .peek.is-on { opacity: 1; scale: 1; }
-
-  @media (hover: none), (pointer: coarse) {
-    .peek { display: none; }
-  }
-
   /* --- "Voir tous les projets" ----------------------------------------- */
 
   .selected :global(.more) {
@@ -743,50 +724,3 @@ const statement =
   .switcher__item[aria-current='page'] { color: var(--bg); background: var(--fg); }
   .switcher__item--all { margin-top: 4px; border-top: 1px solid var(--line-soft); border-radius: 0 0 9px 9px; }
 </style>
-
-<script>
-  /* The round "Voir" label that follows the cursor over a project. Bound at
-     document level once per page, and unbound before the next one. */
-  let stop: (() => void) | null = null;
-
-  const init = () => {
-    stop?.();
-    stop = null;
-    const label = document.querySelector<HTMLElement>('[data-peek-label]');
-    if (!label || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-
-    let x = 0, y = 0, tx = 0, ty = 0, frame = 0, on = false;
-
-    const tick = () => {
-      // Eased follow, so the label trails the cursor a touch.
-      x += (tx - x) * 0.2;
-      y += (ty - y) * 0.2;
-      label.style.transform = `translate3d(${x - 42}px, ${y - 42}px, 0)`;
-      frame = on || Math.abs(tx - x) + Math.abs(ty - y) > 0.5 ? requestAnimationFrame(tick) : 0;
-    };
-
-    const move = (e: PointerEvent) => {
-      const card = (e.target as HTMLElement).closest('[data-peek]');
-      tx = e.clientX;
-      ty = e.clientY;
-      if (card && !on) {
-        on = true;
-        x = tx;
-        y = ty;
-        label.classList.add('is-on');
-      } else if (!card && on) {
-        on = false;
-        label.classList.remove('is-on');
-      }
-      if (!frame) frame = requestAnimationFrame(tick);
-    };
-
-    document.addEventListener('pointermove', move, { passive: true });
-    stop = () => {
-      document.removeEventListener('pointermove', move);
-      if (frame) cancelAnimationFrame(frame);
-    };
-  };
-
-  document.addEventListener('astro:page-load', init);
-</script>

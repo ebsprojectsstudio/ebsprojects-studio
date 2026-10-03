@@ -78,11 +78,6 @@ function isCurrent(href: string) {
     border-bottom-color: var(--line-soft);
   }
 
-  /* Slide the bar away while scrolling down, bring it back on scroll up. */
-  .header[data-hidden]:not([data-menu-open]) {
-    transform: translateY(-100%);
-  }
-
   .header__inner {
     display: flex;
     align-items: center;
@@ -299,14 +294,11 @@ function isCurrent(href: string) {
       if (e.matches && wanted) setMenu(false);
     });
 
-    let lastY = window.scrollY;
     let ticking = false;
 
+    // The bar stays put at the top; it only gains its backdrop once scrolled.
     const onScroll = () => {
-      const y = window.scrollY;
-      header.toggleAttribute('data-scrolled', y > 12);
-      header.toggleAttribute('data-hidden', y > 240 && y > lastY);
-      lastY = y;
+      header.toggleAttribute('data-scrolled', window.scrollY > 12);
       ticking = false;
     };
 

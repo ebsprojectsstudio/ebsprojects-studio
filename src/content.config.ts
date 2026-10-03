@@ -37,6 +37,9 @@ const projects = defineCollection({
       /** Optional zoom on that photograph in the mosaic, 1 = none. Tightens
           the crop on a subject that sits small in the middle of the frame. */
       homeZoom: z.number().min(1).max(2).optional(),
+      /** Optional photograph revealed when the home page card is hovered;
+          falls back to another photograph of the project. */
+      homeHoverImage: image().optional(),
       /** The scrolling band at the top of the project page. */
       strip: z.array(image()).min(1),
       /** The grid below it. Each slot's span and crop ratio were measured on

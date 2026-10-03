@@ -10,6 +10,7 @@ services:
 order: 6
 cover: "../../assets/images/black-white-burger-cover.jpg"
 thumb: "../../assets/images/black-white-burger-01.jpg"
+homeHoverImage: "../../assets/images/black-white-burger-02.jpg"
 strip:
   - "../../assets/images/black-white-burger-01.jpg"
   - "../../assets/images/black-white-burger-02.jpg"

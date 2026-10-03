@@ -100,19 +100,26 @@ const expertiseBodies = await Promise.all(
     overflow-x: auto;
     /* No snapping: it would auto-scroll past the left gutter on load. */
     scrollbar-width: none;
-    /* The columns fade from halfway across the content to 10% at its right
-       edge, as on the original (stops at 47.5% and 95% of the content
-       width, measured on ebsprojects.studio). The rail runs edge to edge,
-       so the stops are offset by the gutter. */
+    /* As on the original: the columns fade from halfway across the content
+       to 10% at its right edge; once the rail has been scrolled, the left
+       edge fades the same way, and the right one clears at the very end
+       (stops at 5%, 47.5% and 95% of the content width, measured on
+       ebsprojects.studio). The rail runs edge to edge, so the stops are
+       offset by the gutter. */
+    --fade-left: #000;
+    --fade-right: rgba(0, 0, 0, 0.1);
     --fade: linear-gradient(
       90deg,
+      var(--fade-left) calc(var(--gutter) + (100% - 2 * var(--gutter)) * 0.05),
       #000 calc(var(--gutter) + (100% - 2 * var(--gutter)) * 0.475),
-      rgba(0, 0, 0, 0.1) calc(var(--gutter) + (100% - 2 * var(--gutter)) * 0.95)
+      var(--fade-right) calc(var(--gutter) + (100% - 2 * var(--gutter)) * 0.95)
     );
     -webkit-mask-image: var(--fade);
     mask-image: var(--fade);
   }
   .rail::-webkit-scrollbar { display: none; }
+  .rail[data-scrolled] { --fade-left: rgba(0, 0, 0, 0.1); }
+  .rail[data-at-end] { --fade-right: #000; }
 
   /* 257px, whatever the window width — measured at 1440 and 1726. */
   .rail__item { flex: 0 0 257px; }
@@ -217,6 +224,9 @@ const expertiseBodies = await Promise.all(
         const end = atEnd();
         prev?.toggleAttribute('hidden', start);
         next?.toggleAttribute('hidden', end);
+        // The fade follows: left once scrolled, right until the end.
+        rail.toggleAttribute('data-scrolled', !start);
+        rail.toggleAttribute('data-at-end', end);
         // Once the last column is in view, the hint offers the way back.
         hint?.toggleAttribute('data-back', end);
         if (hintLabel) hintLabel.textContent = end ? 'Revenir au début' : 'Faites défiler';
