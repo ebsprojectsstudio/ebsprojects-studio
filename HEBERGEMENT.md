@@ -2,9 +2,9 @@
 
 Plan de sortie de Framer pour `ebsprojects.studio`.
 
-**État au 29 août 2026 :** le site est en ligne sur l'adresse de test
-<https://ebsprojectsstudio.github.io/ebsprojects-studio/>. Il reste à basculer
-le domaine (étapes 4 à 7 ci-dessous).
+**État au 3 octobre 2026 :** le site est passé en mode domaine (fichier
+`public/CNAME`, variables de test retirées du workflow). Il reste à régler le
+domaine dans GitHub et les DNS chez IONOS (étapes 6 et 7 ci-dessous).
 
 ## Point de départ
 

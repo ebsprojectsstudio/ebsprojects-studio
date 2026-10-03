@@ -33,15 +33,8 @@ jobs:
 
       - name: Construire le site
         run: npm run build
-        env:
-          # ─────────────────────────────────────────────────────────────
-          # PHASE DE TEST — le site est servi sous un sous-dossier.
-          # Au moment de passer sur ebsprojects.studio, supprimer ces deux
-          # lignes et ajouter un fichier `public/CNAME` contenant :
-          #     ebsprojects.studio
-          # ─────────────────────────────────────────────────────────────
-          ASTRO_SITE: https://ebsprojectsstudio.github.io
-          ASTRO_BASE: /ebsprojects-studio
+        # Servi à la racine de ebsprojects.studio (voir public/CNAME) :
+        # les valeurs par défaut d'astro.config.mjs s'appliquent.
 
       - uses: actions/upload-pages-artifact@v4
         with:
