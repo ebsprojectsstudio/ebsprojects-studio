@@ -27,6 +27,7 @@ import Showcase from './Showcase.astro';
 import { contact, clients } from '../data/site';
 import { HERO_STYLES, heroStyles, type HeroStyle } from '../data/hero';
 import { url } from '../lib/url';
+import { edgeColors } from '../lib/edgeColors';
 
 interface Props {
   /** Overrides the animation chosen in the CMS — used by the previews. */
@@ -70,6 +71,15 @@ const alt = (p: Project): ImageMetadata => {
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
+/* Hover photographs shown whole sit on their own background colour,
+   read from the photograph's top and bottom edges. */
+const wholeFill = new Map<string, string>();
+for (const p of selected) {
+  if (!p.data.homeHoverWhole) continue;
+  const c = await edgeColors(alt(p));
+  wholeFill.set(p.id, c ? `--fill-top:${c.top};--fill-bottom:${c.bottom}` : '');
+}
+
 const statement =
   'Directrice artistique et designer graphique à Bordeaux, je crée des projets visuels sur mesure pour marques et institutions, en privilégiant sens, esthétique et impact.';
 ---
@@ -107,8 +117,7 @@ const statement =
                     />
                     {
                       p.data.homeHoverWhole ? (
-                        <span class="swap__alt swap__alt--whole">
-                          <Image class="swap__backdrop" src={alt(p)} alt="" widths={[400]} quality={60} sizes="400px" />
+                        <span class="swap__alt swap__alt--whole" style={wholeFill.get(p.id)}>
                           <Image src={alt(p)} alt="" widths={[500, 800, 1240, 1800, 2400]} quality={85}
                             sizes="(max-width: 809px) 96vw, 55vw" />
                         </span>
@@ -357,20 +366,19 @@ const statement =
 
   a:hover .swap__inner > :global(img:not(.swap__alt)) { transform: scale(1.04); }
 
-  /* A hover photograph shown whole (homeHoverWhole): contained, over a
-     blurred, enlarged copy of itself that fills the rest of the card. */
-  .swap :global(.swap__alt--whole) { display: block; overflow: hidden; }
+  /* A hover photograph shown whole (homeHoverWhole): contained, on its own
+     background colour (read from its edges at build time), so the margins
+     look like more of the picture. */
+  .swap :global(.swap__alt--whole) {
+    display: block;
+    overflow: hidden;
+    background: linear-gradient(var(--fill-top, #000), var(--fill-bottom, #000));
+  }
   .swap :global(.swap__alt--whole img) {
     position: absolute;
     inset: 0;
     object-fit: contain;
   }
-  .swap :global(.swap__alt--whole .swap__backdrop) {
-    object-fit: cover;
-    filter: blur(28px) brightness(0.8);
-    transform: scale(1.2);
-  }
-
   /* A per-project zoom (homeZoom), on its own property so it stacks with
      the hover and fade-in transforms instead of being replaced by them. */
   .swap__inner > :global(img:not(.swap__alt)) { scale: var(--zoom, 1); }
