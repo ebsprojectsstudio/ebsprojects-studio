@@ -62,7 +62,6 @@ const heroSlides = forcedSlides
 
 const selected = home.data.selected.map((ref) => pick(ref.id));
 
-const expertises = (await getCollection('expertises')).sort((a, b) => a.data.order - b.data.order);
 
 /** The photograph shown in the mosaic. */
 const main = (p: Project): ImageMetadata => p.data.homeImage ?? p.data.cover;
@@ -167,8 +166,6 @@ const statement =
         />
         <Reveal class="studio__facts r-20" delay={0.2}>
           <dl class="facts">
-            <div><dt>Studio</dt><dd>Indépendant</dd></div>
-            <div><dt>Expertises</dt><dd>{pad(expertises.length)}</dd></div>
             <div><dt>Basée à</dt><dd>{contact.city}</dd></div>
           </dl>
           <ArrowLink href={url('/contact')}>Travaillons ensemble</ArrowLink>
