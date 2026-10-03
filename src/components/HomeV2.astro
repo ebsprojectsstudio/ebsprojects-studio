@@ -466,14 +466,14 @@ const statement =
     --drop-lg: clamp(2.5rem, 7vw, 6rem);
   }
 
-  /* Four placements, the second row turned half a circle from the first:
-     a large landscape top left and a tall portrait dropped on the right,
-     then a tall portrait dropped on the left and a large landscape on the
-     right. The two landscapes share a crop, as do the two portraits, so the
-     four read as one composition.
+  /* Four placements. The first row zigzags: a large landscape top left,
+     a tall portrait dropped on the right. The second row answers it with
+     calm: two photographs side by side, tops and bottoms aligned — the
+     crops (16:9 over seven columns, 5:4 over five) give both the same
+     height.
 
        1  large, left             2  tall, right, dropped
-       3  tall, left, dropped     4  large, right                           */
+       3  landscape, left         4  landscape, right, same height          */
   .mosaic :global(.mosaic__item) {
     grid-column: var(--col);
     margin-top: var(--drop, 0);
@@ -481,8 +481,8 @@ const statement =
 
   .mosaic :global(.mosaic__item:nth-child(4n + 1)) { --col: 1 / span 7;  --ratio: 3 / 2; }
   .mosaic :global(.mosaic__item:nth-child(4n + 2)) { --col: 9 / span 4;  --ratio: 4 / 5; --drop: var(--drop-lg); }
-  .mosaic :global(.mosaic__item:nth-child(4n + 3)) { --col: 1 / span 4;  --ratio: 4 / 5; --drop: var(--drop-lg); }
-  .mosaic :global(.mosaic__item:nth-child(4n))     { --col: 6 / span 7;  --ratio: 3 / 2; }
+  .mosaic :global(.mosaic__item:nth-child(4n + 3)) { --col: 1 / span 7;  --ratio: 16 / 9; }
+  .mosaic :global(.mosaic__item:nth-child(4n))     { --col: 8 / span 5;  --ratio: 5 / 4; }
 
   .scard { display: block; }
 
