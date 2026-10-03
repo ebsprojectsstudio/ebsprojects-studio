@@ -168,31 +168,44 @@ const slides = home.data.slider.map((s) => {
   .slider__dots {
     position: absolute;
     left: 50%;
-    bottom: 73px;
+    bottom: 66px;
     translate: -50% 0;
     display: flex;
-    gap: 8px;
+    gap: 2px;
   }
 
+  /* Small circles drawn with a fine outline; the current one is filled.
+     The button itself is larger than the circle, to be easy to hit. */
   .slider__dot {
-    width: 28px;
-    height: 6px;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
     padding: 0;
     border: 0;
-    background: rgba(255, 255, 255, 0.2);
+    background: none;
     cursor: pointer;
-    transition: background-color 0.4s var(--ease);
   }
 
-  .slider__dot:hover { background: rgba(255, 255, 255, 0.55); }
-  .slider__dot[aria-selected='true'] { background: var(--fg); }
+  .slider__dot::before {
+    content: '';
+    width: 9px;
+    height: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    background: transparent;
+    transition: background-color 0.4s var(--ease), border-color 0.4s var(--ease);
+  }
+
+  .slider__dot:hover::before { border-color: var(--fg); background: rgba(255, 255, 255, 0.35); }
+  .slider__dot[aria-selected='true']::before { border-color: var(--fg); background: var(--fg); }
 
   @media (max-width: 809.98px) {
     .slide__meta { top: 16px; left: 16px; }
     .slide__title { font-size: 1rem; }
     .slide__services { font-size: 0.875rem; }
     .showcase :global(.slider__all) { display: none; }
-    .slider__dots { bottom: 20px; }
+    .slider__dots { bottom: 14px; }
   }
 </style>
 
