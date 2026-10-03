@@ -249,7 +249,8 @@ button:active:not(:disabled) { scale: 0.96; transition: scale var(--press); }
   --rv-from-opacity: 0;
   --rv-from-y: 0px;
   --rv-dur: 1.4s;
-  --rv-delay: 0.2s;
+  /* Base delay, plus any stagger <Reveal delay={…}> hands down. */
+  --rv-delay: calc(0.2s + var(--reveal-delay, 0s));
   --rv-spring: var(--spring-smooth);
   opacity: var(--rv-from-opacity);
   transform: translateY(var(--rv-from-y));
@@ -277,7 +278,7 @@ button:active:not(:disabled) { scale: 0.96; transition: scale var(--press); }
   --rv-from-opacity: 0.2;
   --rv-from-y: 40px;
   --rv-dur: 0.88s;
-  --rv-delay: 0.1s;
+  --rv-delay: calc(0.1s + var(--reveal-delay, 0s));
   --rv-spring: var(--spring-settle);
   transform: perspective(1200px) translateY(var(--rv-from-y));
 }

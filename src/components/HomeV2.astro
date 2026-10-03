@@ -91,9 +91,10 @@ const statement =
         <div class="mosaic">
           {
             selected.map((p, i) => (
-              <Reveal class="mosaic__item">
+              <Reveal class="mosaic__item r-30" delay={(i % 2) * 0.12}>
                 <a class="scard" href={url(`/projects/${p.id}`)}>
                   <span class="swap scard__media">
+                    <span class="swap__inner">
                     <Image
                       src={main(p)}
                       alt={p.data.title}
@@ -111,6 +112,7 @@ const statement =
                       quality={85}
                       sizes="(max-width: 809px) 96vw, 55vw"
                     />
+                    </span>
                   </span>
                   <span class="scard__caption">
                     <span class="scard__index">{pad(i + 1)}</span>
@@ -125,7 +127,7 @@ const statement =
           }
         </div>
 
-        <Reveal class="more">
+        <Reveal class="more r-20">
           <a class="more__button" href={url('/projects')}>
             <span>Voir tous les projets</span>
             <span class="more__count">({pad(projects.length)})</span>
@@ -143,11 +145,11 @@ const statement =
   </div>
 
   {/* -------------------------------------------- Statement + clients */}
-  <section class="section studio">
+  <section class="section studio r-sect" data-reveal>
     <div class="wrap studio__grid">
-      <Reveal class="studio__label">
-        <p class="label--section">Le studio</p>
-      </Reveal>
+      <div class="studio__label">
+        <SplitText as="p" text="Le studio" class="label--section" />
+      </div>
       <div class="studio__body">
         <SplitText
           as="p"
@@ -156,7 +158,7 @@ const statement =
           emphasis={['projets visuels sur mesure', 'sens, esthétique et impact']}
           class="studio__statement"
         />
-        <Reveal class="studio__facts">
+        <Reveal class="studio__facts r-20" delay={0.2}>
           <dl class="facts">
             <div><dt>Projets</dt><dd>{pad(projects.length)}</dd></div>
             <div><dt>Expertises</dt><dd>{pad(expertises.length)}</dd></div>
@@ -168,8 +170,10 @@ const statement =
     </div>
 
     <div class="clients" aria-label="Clients">
-      <p class="wrap label clients__label">Ils m'ont fait confiance</p>
-      <div class="marquee">
+      <Reveal class="wrap clients__label">
+        <SplitText as="p" text="Ils m'ont fait confiance" class="label" />
+      </Reveal>
+      <Reveal class="marquee r-20" delay={0.1}>
         {
           [0, 1].map((copy) => (
             <ul class="marquee__group" aria-hidden={copy === 1 ? 'true' : undefined}>
@@ -179,12 +183,12 @@ const statement =
             </ul>
           ))
         }
-      </div>
+      </Reveal>
     </div>
   </section>
 
   {/* -------------------------------------------------------- Expertises */}
-  <section class="section" id="expertises">
+  <section class="section r-sect" id="expertises" data-reveal>
     <div class="wrap">
       <Reveal class="section-head">
         <SplitText as="h2" text="Expertises" class="label--section" />
@@ -238,7 +242,7 @@ const statement =
   </section>
 
   {/* ----------------------------------------------------------- Process */}
-  <section class="section" id="process">
+  <section class="section r-sect" id="process" data-reveal>
     <div class="wrap">
       <Reveal class="section-head">
         <SplitText as="h2" text="Comment se déroule un projet ?" class="label--section" />
@@ -276,7 +280,7 @@ const statement =
           </svg>
         </span>
       </a>
-      <Reveal class="cta__direct">
+      <Reveal class="cta__direct r-20" delay={0.3}>
         <a class="link" href={`mailto:${contact.email}`}>{contact.email}</a>
         <a class="link" href={`tel:${contact.phoneHref}`}>{contact.phoneDisplay}</a>
       </Reveal>
@@ -327,6 +331,20 @@ const statement =
     overflow: hidden;
     background: var(--bg-raised);
   }
+
+  /* Each photograph settles in its frame as its card comes into view —
+     the same gesture as the V1 slideshow's slides (1.08 -> 1). */
+  .swap__inner {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform: scale(1.08);
+    transition: transform 1.6s var(--spring-smooth) calc(0.2s + var(--reveal-delay, 0s));
+  }
+
+  :global(.is-visible) > .scard .swap__inner,
+  :global(html.no-js) .swap__inner { transform: none; }
 
   .swap :global(img) {
     width: 100%;
@@ -415,7 +433,7 @@ const statement =
 
   .clients { margin-top: clamp(4rem, 8vw, 7rem); }
 
-  .clients__label { margin-bottom: 1.5rem; }
+  .clients :global(.clients__label) { display: block; margin-bottom: 1.5rem; }
 
   .marquee {
     display: flex;
@@ -763,6 +781,7 @@ const statement =
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .swap__inner { transform: none; transition: none; }
     .marquee__group { animation: none; }
     .marquee { overflow-x: auto; }
   }
