@@ -24,7 +24,7 @@ import Hero from './hero/Hero.astro';
 import ExpertiseRail from './ExpertiseRail.astro';
 import ProcessSteps from './ProcessSteps.astro';
 import Showcase from './Showcase.astro';
-import { contact, clients, serviceSlugs } from '../data/site';
+import { contact, clients, serviceSlugs, site } from '../data/site';
 import { HERO_STYLES, heroStyles, type HeroStyle } from '../data/hero';
 import { url } from '../lib/url';
 import { edgeColors } from '../lib/edgeColors';
@@ -99,7 +99,12 @@ const statement =
   'Directrice artistique et designer graphique à Bordeaux, je crée des projets visuels sur mesure pour marques et institutions, en privilégiant sens, esthétique et impact.';
 ---
 
-<Base title={preview ? `Aperçu — ${heroStyles[variant].label}` : undefined} noindex={preview}>
+<Base
+  title={preview ? `Aperçu — ${heroStyles[variant].label}` : undefined}
+  fullTitle={preview ? undefined : site.homeTitle}
+  description={site.homeDescription}
+  noindex={preview}
+>
   {/*
     The hero stays pinned while "Selected projects" rises over it on a grey
     panel, as on the original site; the title fades out as it comes.

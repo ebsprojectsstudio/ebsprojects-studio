@@ -9,6 +9,8 @@ import { url } from '../lib/url';
 
 interface Props {
   title?: string;
+  /** The whole <title>, when the "Page — studio" pattern does not fit. */
+  fullTitle?: string;
   description?: string;
   /** Absolute or root-relative image used for social previews. */
   image?: string;
@@ -18,20 +20,23 @@ interface Props {
 
 const {
   title,
+  fullTitle,
   description = site.description,
   image = '/brand/og-image.png',
   noindex = false,
 } = Astro.props;
 
-const pageTitle = title ? `${title} — ${site.name}` : `${site.name} — ${site.description}`;
-const canonical = new URL(Astro.url.pathname.replace(/\/$/, '') || '/', site.url).href;
+const pageTitle = fullTitle ?? (title ? `${title} — ${site.name}` : `${site.name} — ${site.description}`);
+/* With a trailing slash, as GitHub Pages serves every page (a folder) and
+   as the sitemap lists them: the canonical must not point at a redirect. */
+const canonical = new URL(Astro.url.pathname.replace(/\/?$/, '/'), site.url).href;
 const ogImage = new URL(image, site.url).href;
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'ProfessionalService',
   name: site.name,
-  description: site.description,
+  description: site.homeDescription,
   url: site.url,
   image: ogImage,
   email: contact.email,
@@ -42,7 +47,8 @@ const jsonLd = {
     addressLocality: contact.city,
     addressCountry: 'FR',
   },
-  areaServed: 'FR',
+  areaServed: [{ '@type': 'City', name: 'Bordeaux' }, { '@type': 'Country', name: 'France' }],
+  knowsAbout: ['Direction artistique', 'Design graphique', 'Identité visuelle', 'Édition', 'Packaging', 'Illustration'],
   sameAs: socials.map((s) => s.url),
 };
 ---

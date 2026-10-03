@@ -9,6 +9,11 @@ export const site = {
   url: 'https://ebsprojects.studio',
   title: 'ebs:projects.studio',
   description: 'Direction Artistique & Design Graphique à Bordeaux',
+  /** What the home page says to search engines: the terms people type
+      ("studio graphique Bordeaux") first, then what the studio does. */
+  homeTitle: 'Studio graphique à Bordeaux — ebs:projects.studio',
+  homeDescription:
+    'ebs:projects.studio, studio graphique à Bordeaux : direction artistique, identité visuelle, édition, packaging et illustration par Elina Bouyssou, pour marques et institutions.',
   locale: 'fr_FR',
   lang: 'fr',
   /** Shown in the footer. The original site stamps 2025, not the current year. */
