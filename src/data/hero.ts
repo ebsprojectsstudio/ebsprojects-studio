@@ -11,12 +11,12 @@ export const heroStyles: Record<HeroStyle, { label: string; description: string 
   trail: {
     label: 'Traînée de photos',
     description:
-      "La version actuelle : des photos éclosent autour du titre et suivent la souris quand on la déplace.",
+      "Des photos éclosent autour du titre et suivent la souris quand on la déplace (l'ancienne ouverture).",
   },
   'plein-ecran': {
     label: 'Plein écran',
     description:
-      'Les photos défilent en plein écran derrière le titre, chacune glissant sur la précédente, avec le nom du projet en bas.',
+      'La version en ligne : les photos défilent en plein écran derrière le titre, chacune glissant sur la précédente, avec le nom du projet en bas.',
   },
   mur: {
     label: 'Mur de photos',
