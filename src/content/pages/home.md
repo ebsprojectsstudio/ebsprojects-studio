@@ -18,10 +18,6 @@ hero:
       image: ../../assets/images/terra-delyssa-04.jpg
     - project: adidas-collection-pod
       image: ../../assets/images/adidas-pod-02.jpg
-nouveautes:
-  - epeda-collection-dedicace
-  - mort-subite-lambic-botanic
-  - beer-factory
 selected:
   - terra-delyssa
   - black-white-burger

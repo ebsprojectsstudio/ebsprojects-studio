@@ -87,9 +87,6 @@ const pages = defineCollection({
             .default([]),
         })
         .default({}),
-      /** "Nouveaux projets" on the V2 home page, newest first. Optional: the
-          section is simply left out when the list is empty. */
-      nouveautes: z.array(reference('projects')).default([]),
       /** "Selected projects", in display order. */
       selected: z.array(reference('projects')).min(1),
       /** The slideshow above the footer: a project, and the photograph shown for it. */

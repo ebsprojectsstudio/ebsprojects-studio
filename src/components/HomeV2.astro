@@ -5,12 +5,11 @@
  * changes is how much room the work gets:
  *
  *   1. the opening animation (chosen in the CMS), whose title fades out as
- *      "Selected projects" — an offset editorial grid — slides over it;
- *   2. "Nouveaux projets" — the latest one full width, the others beside it;
- *   3. a short statement and the clients, scrolling;
- *   5. every project as an index, the photograph following the cursor;
- *   6. expertises and the process laid out flat, no carousel or accordion;
- *   7. a closing call to get in touch.
+ *      "Selected projects" — every project, in an offset grid — slides over it;
+ *   2. a short statement and the clients, scrolling;
+ *   3. every project as an index, the photograph following the cursor;
+ *   4. expertises and the process laid out flat, no carousel or accordion;
+ *   5. a closing call to get in touch.
  */
 import { getCollection, getEntry, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
@@ -47,10 +46,10 @@ const heroSlides = home.data.hero.slides.length
   ? home.data.hero.slides.map((s) => ({ project: pick(s.project.id), image: s.image }))
   : projects.map((p) => ({ project: p, image: p.data.cover }));
 
-const latest = home.data.nouveautes.map((ref) => pick(ref.id));
-const [featured, ...recent] = latest;
-const selected = home.data.selected.map((ref) => pick(ref.id));
-const isNew = new Set(latest.map((p) => p.id));
+/* Every project goes in the mosaic: the ones chosen as "Selected projects"
+   first, in their CMS order, then the rest in the order of the projects page. */
+const chosen = home.data.selected.map((ref) => pick(ref.id));
+const selected = [...chosen, ...projects.filter((p) => !chosen.includes(p))];
 
 const expertises = (await getCollection('expertises')).sort((a, b) => a.data.order - b.data.order);
 const expertiseCards = await Promise.all(
@@ -65,13 +64,6 @@ const expertiseCards = await Promise.all(
 const alt = (p: Project): ImageMetadata => {
   const pool = [p.data.thumb, ...p.data.strip, ...p.data.grid.map((g) => g.src)];
   return pool.find((img) => img.src !== p.data.cover.src) ?? p.data.cover;
-};
-
-/** The first sentence of the project text, for the cards that have room. */
-const teaser = (p: Project) => {
-  const text = (p.body ?? '').replace(/\s+/g, ' ').trim();
-  const first = text.split(/(?<=[.!?])\s/)[0] ?? '';
-  return first.length > 170 ? first.slice(0, 167).replace(/\s+\S*$/, '') + '…' : first;
 };
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -136,91 +128,6 @@ const statement =
     </section>
   </div>
 
-  {/* ------------------------------------------------- Nouveaux projets */}
-  {
-    featured && (
-      <section class="section latest">
-        <div class="wrap">
-          <Reveal class="section-head">
-            <h2 class="label--section">
-              <SplitText text="Nouveaux projets" />
-              <span class="count">({pad(latest.length)})</span>
-            </h2>
-            <ArrowLink href={url('/projects')}>Voir tous les projets</ArrowLink>
-          </Reveal>
-
-          <Reveal>
-            <a class="feat" href={url(`/projects/${featured.id}`)}>
-              <span class="feat__zoom">
-                <Image
-                  src={featured.data.cover}
-                  alt={featured.data.title}
-                  widths={[800, 1280, 1920, 2560, 3200]}
-                  quality={85}
-                  sizes="(max-width: 809px) 96vw, 90vw"
-                  loading="eager"
-                  fetchpriority="high"
-                  data-fade
-                />
-              </span>
-              <span class="feat__scrim" aria-hidden="true" />
-              <span class="feat__info">
-                <span class="tag">Nouveau</span>
-                <span class="feat__title">{featured.data.title}</span>
-                <span class="feat__meta">
-                  {featured.data.client} — {featured.data.services.join(' / ')}
-                </span>
-              </span>
-              <span class="feat__cta">
-                <span>Découvrir le projet</span>
-                <svg width="15" height="11" viewBox="0 0 15 11" fill="none" aria-hidden="true">
-                  <path d="M0 5.5h13M8.5 1l4.5 4.5L8.5 10" stroke="currentColor" stroke-width="1.2" />
-                </svg>
-              </span>
-            </a>
-          </Reveal>
-
-          {
-            recent.length > 0 && (
-              <div class="recent">
-                {recent.map((p, i) => (
-                  <Reveal delay={(i % 2) * 0.08}>
-                    <a class="ncard" href={url(`/projects/${p.id}`)}>
-                      <span class="swap">
-                        <Image
-                          src={p.data.cover}
-                          alt={p.data.title}
-                          widths={[500, 800, 1240, 1800]}
-                          quality={85}
-                          sizes="(max-width: 809px) 96vw, 44vw"
-                          data-fade
-                        />
-                        <Image
-                          class="swap__alt"
-                          src={alt(p)}
-                          alt=""
-                          widths={[500, 800, 1240, 1800]}
-                          quality={85}
-                          sizes="(max-width: 809px) 96vw, 44vw"
-                        />
-                        <span class="tag tag--on-image">Nouveau</span>
-                      </span>
-                      <span class="ncard__head">
-                        <span class="ncard__title">{p.data.title}</span>
-                        <span class="ncard__services">{p.data.services.join(' / ')}</span>
-                      </span>
-                      {teaser(p) && <span class="ncard__teaser">{teaser(p)}</span>}
-                    </a>
-                  </Reveal>
-                ))}
-              </div>
-            )
-          }
-        </div>
-      </section>
-    )
-  }
-
   {/* -------------------------------------------- Statement + clients */}
   <section class="section studio">
     <div class="wrap studio__grid">
@@ -281,7 +188,6 @@ const statement =
                   <span class="row__num">{pad(i + 1)}</span>
                   <span class="row__title">
                     {p.data.title}
-                    {isNew.has(p.id) && <span class="tag tag--inline">Nouveau</span>}
                   </span>
                   <span class="row__services">{p.data.services.join(', ')}</span>
                   <span class="row__go" aria-hidden="true">
@@ -443,46 +349,6 @@ const statement =
     color: var(--fg-dim);
   }
 
-  /* --- "Nouveau" tag ------------------------------------------------------ */
-
-  .tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5em;
-    padding: 0.32rem 0.7rem;
-    border-radius: 999px;
-    background: var(--fg);
-    color: var(--bg);
-    font-size: 0.6875rem;
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    line-height: 1.2;
-    white-space: nowrap;
-  }
-
-  .tag::before {
-    content: '';
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: currentColor;
-  }
-
-  .tag--on-image {
-    position: absolute;
-    top: 16px;
-    left: 16px;
-    z-index: 2;
-  }
-
-  .tag--inline {
-    margin-left: 0.9rem;
-    vertical-align: 0.35em;
-    font-size: 0.625rem;
-    letter-spacing: 0.1em;
-  }
-
   /* --- Image swap on hover ------------------------------------------------ */
 
   .swap {
@@ -518,133 +384,6 @@ const statement =
   }
 
   a:hover .swap :global(img:not(.swap__alt)) { transform: scale(1.04); }
-
-  /* --- Nouveaux projets: featured ---------------------------------------- */
-
-  .feat {
-    position: relative;
-    display: block;
-    height: clamp(440px, 78vh, 860px);
-    overflow: hidden;
-    background: var(--bg-raised);
-  }
-
-  .feat__zoom {
-    display: block;
-    width: 100%;
-    height: 100%;
-    transition: transform 1.6s var(--spring-smooth);
-  }
-
-  .feat__zoom :global(img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .feat:hover .feat__zoom { transform: scale(1.035); }
-
-  .feat__scrim {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.62) 100%);
-    pointer-events: none;
-  }
-
-  .feat__info {
-    position: absolute;
-    left: clamp(1.25rem, 3vw, 2.5rem);
-    right: clamp(1.25rem, 3vw, 2.5rem);
-    bottom: clamp(1.25rem, 3vw, 2.5rem);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.9rem;
-  }
-
-  .feat__title {
-    max-width: 18ch;
-    font-size: var(--fs-title);
-    font-weight: 500;
-    line-height: 1.02;
-    letter-spacing: -0.04em;
-    text-transform: uppercase;
-  }
-
-  .feat__meta {
-    font-size: 0.9375rem;
-    color: rgba(255, 255, 255, 0.75);
-  }
-
-  .feat__cta {
-    position: absolute;
-    top: clamp(1.25rem, 3vw, 2.5rem);
-    right: clamp(1.25rem, 3vw, 2.5rem);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.7em;
-    padding: 0.7rem 1.1rem;
-    border-radius: 999px;
-    background: rgba(22, 22, 22, 0.55);
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    font-size: var(--fs-label);
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    transition: background-color 0.4s var(--ease), color 0.4s var(--ease);
-  }
-
-  .feat__cta svg { transition: transform 0.45s var(--ease); }
-  .feat:hover .feat__cta { background: var(--fg); color: var(--bg); }
-  .feat:hover .feat__cta svg { transform: translateX(3px); }
-
-  /* --- Nouveaux projets: the others -------------------------------------- */
-
-  .recent {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 40px;
-    margin-top: 40px;
-  }
-
-  .ncard { display: block; }
-
-  .ncard .swap { aspect-ratio: 613 / 440; }
-
-  .ncard__head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.4rem 1.5rem;
-    margin-top: 20px;
-  }
-
-  .ncard__title {
-    font-size: 1.25rem;
-    font-weight: 400;
-    line-height: 1.3;
-    letter-spacing: -0.01em;
-  }
-
-  .ncard__services {
-    font-size: 0.875rem;
-    color: var(--fg-dim);
-  }
-
-  .ncard__teaser {
-    display: -webkit-box;
-    margin-top: 0.6rem;
-    max-width: 60ch;
-    font-size: 0.9375rem;
-    font-weight: 300;
-    line-height: 1.6;
-    color: var(--fg-muted);
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
 
   /* --- Studio statement --------------------------------------------------- */
 
@@ -1064,11 +803,6 @@ const statement =
   }
 
   @media (max-width: 809.98px) {
-    .recent { grid-template-columns: minmax(0, 1fr); gap: 2.5rem; }
-
-    .feat { height: auto; aspect-ratio: 4 / 5; }
-    .feat__cta { display: none; }
-
     .studio__grid { grid-template-columns: minmax(0, 1fr); row-gap: 1.25rem; }
     .studio :global(.studio__label),
     .studio__body { grid-column: auto; }
@@ -1086,7 +820,6 @@ const statement =
 
     .row { grid-template-columns: 2.25rem minmax(0, 1fr) 1.25rem; gap: 0.9rem; }
     .index:hover .row { opacity: 1; }
-    .tag--inline { display: none; }
 
     .skills { grid-template-columns: minmax(0, 1fr); }
     .skills__extra { display: none; }

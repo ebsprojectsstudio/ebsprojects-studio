@@ -208,18 +208,6 @@ collections:
                   - name: image
                     label: Photo
                     widget: image
-          - name: nouveautes
-            label: Nouveaux projets
-            hint: >-
-              Les projets les plus récents, du plus récent au plus ancien. Le
-              premier est affiché en grand. Laisser vide pour masquer la section.
-            widget: relation
-            collection: projects
-            value_field: "{{slug}}"
-            search_fields: [title, client]
-            display_fields: [title]
-            multiple: true
-            required: false
           - name: selected
             label: Projets sélectionnés (« Selected projects »)
             hint: >-
