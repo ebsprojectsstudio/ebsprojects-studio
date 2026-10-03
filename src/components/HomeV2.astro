@@ -4,10 +4,10 @@
  * current one. Same palette, type and motion as the rest of the site; what
  * changes is how much room the work gets:
  *
- *   1. the opening animation, unchanged (chosen in the CMS);
+ *   1. the opening animation (chosen in the CMS), whose title fades out as
+ *      "Selected projects" — an offset editorial grid — slides over it;
  *   2. "Nouveaux projets" — the latest one full width, the others beside it;
  *   3. a short statement and the clients, scrolling;
- *   4. "Selected projects" as an offset editorial grid;
  *   5. every project as an index, the photograph following the cursor;
  *   6. expertises and the process laid out flat, no carousel or accordion;
  *   7. a closing call to get in touch.
@@ -81,178 +81,181 @@ const statement =
 ---
 
 <Base title={preview ? 'Aperçu — Accueil V2' : undefined} noindex={preview}>
+  {/*
+    The hero stays pinned while "Selected projects" rises over it. The
+    section is see-through, so the photographs pass over the title, which
+    fades out as they come.
+  */}
   <div class="curtain">
     <Hero variant={home.data.hero.style} slides={heroSlides} />
 
-    <div class="panel">
-      {/* ------------------------------------------------- Nouveaux projets */}
-      {
-        featured && (
-          <section class="section latest" id="work">
-            <div class="wrap">
-              <Reveal class="section-head">
-                <h2 class="label--section">
-                  <SplitText text="Nouveaux projets" />
-                  <span class="count">({pad(latest.length)})</span>
-                </h2>
-                <ArrowLink href={url('/projects')}>Voir tous les projets</ArrowLink>
-              </Reveal>
+    {/* ------------------------------------------------- Selected projects */}
+    <section class="section selected" id="work">
+      <div class="wrap">
+        <Reveal class="section-head">
+          <SplitText as="h2" text="Selected projects" class="label--section" />
+          <ArrowLink href={url('/projects')}>Voir tous les projets</ArrowLink>
+        </Reveal>
 
-              <Reveal>
-                <a class="feat" href={url(`/projects/${featured.id}`)}>
-                  <span class="feat__zoom">
+        <div class="mosaic">
+          {
+            selected.map((p, i) => (
+              <Reveal class="mosaic__item">
+                <a class="scard" href={url(`/projects/${p.id}`)}>
+                  <span class="swap scard__media">
                     <Image
-                      src={featured.data.cover}
-                      alt={featured.data.title}
-                      widths={[800, 1280, 1920, 2560, 3200]}
+                      src={p.data.cover}
+                      alt={p.data.title}
+                      widths={[500, 800, 1240, 1800, 2400]}
                       quality={85}
-                      sizes="(max-width: 809px) 96vw, 90vw"
-                      loading="eager"
-                      fetchpriority="high"
+                      sizes="(max-width: 809px) 96vw, 55vw"
                       data-fade
                     />
+                    <Image
+                      class="swap__alt"
+                      src={alt(p)}
+                      alt=""
+                      widths={[500, 800, 1240, 1800, 2400]}
+                      quality={85}
+                      sizes="(max-width: 809px) 96vw, 55vw"
+                    />
                   </span>
-                  <span class="feat__scrim" aria-hidden="true" />
-                  <span class="feat__info">
-                    <span class="tag">Nouveau</span>
-                    <span class="feat__title">{featured.data.title}</span>
-                    <span class="feat__meta">
-                      {featured.data.client} — {featured.data.services.join(' / ')}
+                  <span class="scard__caption">
+                    <span class="scard__index">{pad(i + 1)}</span>
+                    <span class="scard__text">
+                      <span class="scard__title">{p.data.title}</span>
+                      <span class="scard__services">{p.data.services.join(' / ')}</span>
                     </span>
-                  </span>
-                  <span class="feat__cta">
-                    <span>Découvrir le projet</span>
-                    <svg width="15" height="11" viewBox="0 0 15 11" fill="none" aria-hidden="true">
-                      <path d="M0 5.5h13M8.5 1l4.5 4.5L8.5 10" stroke="currentColor" stroke-width="1.2" />
-                    </svg>
                   </span>
                 </a>
               </Reveal>
-
-              {
-                recent.length > 0 && (
-                  <div class="recent">
-                    {recent.map((p, i) => (
-                      <Reveal delay={(i % 2) * 0.08}>
-                        <a class="ncard" href={url(`/projects/${p.id}`)}>
-                          <span class="swap">
-                            <Image
-                              src={p.data.cover}
-                              alt={p.data.title}
-                              widths={[500, 800, 1240, 1800]}
-                              quality={85}
-                              sizes="(max-width: 809px) 96vw, 44vw"
-                              data-fade
-                            />
-                            <Image
-                              class="swap__alt"
-                              src={alt(p)}
-                              alt=""
-                              widths={[500, 800, 1240, 1800]}
-                              quality={85}
-                              sizes="(max-width: 809px) 96vw, 44vw"
-                            />
-                            <span class="tag tag--on-image">Nouveau</span>
-                          </span>
-                          <span class="ncard__head">
-                            <span class="ncard__title">{p.data.title}</span>
-                            <span class="ncard__services">{p.data.services.join(' / ')}</span>
-                          </span>
-                          {teaser(p) && <span class="ncard__teaser">{teaser(p)}</span>}
-                        </a>
-                      </Reveal>
-                    ))}
-                  </div>
-                )
-              }
-            </div>
-          </section>
-        )
-      }
-
-      {/* -------------------------------------------- Statement + clients */}
-      <section class="section studio" id={featured ? undefined : 'work'}>
-        <div class="wrap studio__grid">
-          <Reveal class="studio__label">
-            <p class="label--section">Le studio</p>
-          </Reveal>
-          <div class="studio__body">
-            <SplitText
-              as="p"
-              text={statement}
-              preset="body"
-              emphasis={['projets visuels sur mesure', 'sens, esthétique et impact']}
-              class="studio__statement"
-            />
-            <Reveal class="studio__facts">
-              <dl class="facts">
-                <div><dt>Projets</dt><dd>{pad(projects.length)}</dd></div>
-                <div><dt>Expertises</dt><dd>{pad(expertises.length)}</dd></div>
-                <div><dt>Basée à</dt><dd>{contact.city}</dd></div>
-              </dl>
-              <ArrowLink href={url('/contact')}>Travaillons ensemble</ArrowLink>
-            </Reveal>
-          </div>
+            ))
+          }
         </div>
-
-        <div class="clients" aria-label="Clients">
-          <p class="wrap label clients__label">Ils m'ont fait confiance</p>
-          <div class="marquee">
-            {
-              [0, 1].map((copy) => (
-                <ul class="marquee__group" aria-hidden={copy === 1 ? 'true' : undefined}>
-                  {clients.map((c) => (
-                    <li class="marquee__item">{c}</li>
-                  ))}
-                </ul>
-              ))
-            }
-          </div>
-        </div>
-      </section>
-    </div>
+      </div>
+    </section>
   </div>
 
-  {/* ------------------------------------------------- Selected projects */}
-  <section class="section selected">
-    <div class="wrap">
-      <Reveal class="section-head">
-        <SplitText as="h2" text="Selected projects" class="label--section" />
-        <ArrowLink href={url('/projects')}>Voir tous les projets</ArrowLink>
-      </Reveal>
+  {/* ------------------------------------------------- Nouveaux projets */}
+  {
+    featured && (
+      <section class="section latest">
+        <div class="wrap">
+          <Reveal class="section-head">
+            <h2 class="label--section">
+              <SplitText text="Nouveaux projets" />
+              <span class="count">({pad(latest.length)})</span>
+            </h2>
+            <ArrowLink href={url('/projects')}>Voir tous les projets</ArrowLink>
+          </Reveal>
 
-      <div class="mosaic">
+          <Reveal>
+            <a class="feat" href={url(`/projects/${featured.id}`)}>
+              <span class="feat__zoom">
+                <Image
+                  src={featured.data.cover}
+                  alt={featured.data.title}
+                  widths={[800, 1280, 1920, 2560, 3200]}
+                  quality={85}
+                  sizes="(max-width: 809px) 96vw, 90vw"
+                  loading="eager"
+                  fetchpriority="high"
+                  data-fade
+                />
+              </span>
+              <span class="feat__scrim" aria-hidden="true" />
+              <span class="feat__info">
+                <span class="tag">Nouveau</span>
+                <span class="feat__title">{featured.data.title}</span>
+                <span class="feat__meta">
+                  {featured.data.client} — {featured.data.services.join(' / ')}
+                </span>
+              </span>
+              <span class="feat__cta">
+                <span>Découvrir le projet</span>
+                <svg width="15" height="11" viewBox="0 0 15 11" fill="none" aria-hidden="true">
+                  <path d="M0 5.5h13M8.5 1l4.5 4.5L8.5 10" stroke="currentColor" stroke-width="1.2" />
+                </svg>
+              </span>
+            </a>
+          </Reveal>
+
+          {
+            recent.length > 0 && (
+              <div class="recent">
+                {recent.map((p, i) => (
+                  <Reveal delay={(i % 2) * 0.08}>
+                    <a class="ncard" href={url(`/projects/${p.id}`)}>
+                      <span class="swap">
+                        <Image
+                          src={p.data.cover}
+                          alt={p.data.title}
+                          widths={[500, 800, 1240, 1800]}
+                          quality={85}
+                          sizes="(max-width: 809px) 96vw, 44vw"
+                          data-fade
+                        />
+                        <Image
+                          class="swap__alt"
+                          src={alt(p)}
+                          alt=""
+                          widths={[500, 800, 1240, 1800]}
+                          quality={85}
+                          sizes="(max-width: 809px) 96vw, 44vw"
+                        />
+                        <span class="tag tag--on-image">Nouveau</span>
+                      </span>
+                      <span class="ncard__head">
+                        <span class="ncard__title">{p.data.title}</span>
+                        <span class="ncard__services">{p.data.services.join(' / ')}</span>
+                      </span>
+                      {teaser(p) && <span class="ncard__teaser">{teaser(p)}</span>}
+                    </a>
+                  </Reveal>
+                ))}
+              </div>
+            )
+          }
+        </div>
+      </section>
+    )
+  }
+
+  {/* -------------------------------------------- Statement + clients */}
+  <section class="section studio">
+    <div class="wrap studio__grid">
+      <Reveal class="studio__label">
+        <p class="label--section">Le studio</p>
+      </Reveal>
+      <div class="studio__body">
+        <SplitText
+          as="p"
+          text={statement}
+          preset="body"
+          emphasis={['projets visuels sur mesure', 'sens, esthétique et impact']}
+          class="studio__statement"
+        />
+        <Reveal class="studio__facts">
+          <dl class="facts">
+            <div><dt>Projets</dt><dd>{pad(projects.length)}</dd></div>
+            <div><dt>Expertises</dt><dd>{pad(expertises.length)}</dd></div>
+            <div><dt>Basée à</dt><dd>{contact.city}</dd></div>
+          </dl>
+          <ArrowLink href={url('/contact')}>Travaillons ensemble</ArrowLink>
+        </Reveal>
+      </div>
+    </div>
+
+    <div class="clients" aria-label="Clients">
+      <p class="wrap label clients__label">Ils m'ont fait confiance</p>
+      <div class="marquee">
         {
-          selected.map((p, i) => (
-            <Reveal class="mosaic__item">
-              <a class="scard" href={url(`/projects/${p.id}`)}>
-                <span class="swap scard__media">
-                  <Image
-                    src={p.data.cover}
-                    alt={p.data.title}
-                    widths={[500, 800, 1240, 1800, 2400]}
-                    quality={85}
-                    sizes="(max-width: 809px) 96vw, 55vw"
-                    data-fade
-                  />
-                  <Image
-                    class="swap__alt"
-                    src={alt(p)}
-                    alt=""
-                    widths={[500, 800, 1240, 1800, 2400]}
-                    quality={85}
-                    sizes="(max-width: 809px) 96vw, 55vw"
-                  />
-                </span>
-                <span class="scard__caption">
-                  <span class="scard__index">{pad(i + 1)}</span>
-                  <span class="scard__text">
-                    <span class="scard__title">{p.data.title}</span>
-                    <span class="scard__services">{p.data.services.join(' / ')}</span>
-                  </span>
-                </span>
-              </a>
-            </Reveal>
+          [0, 1].map((copy) => (
+            <ul class="marquee__group" aria-hidden={copy === 1 ? 'true' : undefined}>
+              {clients.map((c) => (
+                <li class="marquee__item">{c}</li>
+              ))}
+            </ul>
           ))
         }
       </div>
@@ -413,15 +416,26 @@ const statement =
 </Base>
 
 <style>
-  /* --- Curtain: as on the current home page ------------------------------ */
+  /* --- Curtain ------------------------------------------------------------
+     The hero is pinned (sticky, in Hero.astro) and publishes its scroll
+     progress as --hp, 0 -> 1 over the first screen. "Selected projects"
+     has no background of its own, so its photographs slide over the title;
+     the wording lifts and fades out as they cross it. */
 
   .curtain { position: relative; }
 
-  .panel {
+  .selected {
     position: relative;
     z-index: 1;
-    background: var(--bg-panel);
+    padding-top: var(--section-y);
   }
+
+  .curtain :global(.hero__inner) {
+    opacity: clamp(0, calc(1 - var(--hp, 0) * 1.2), 1);
+    transform: translateY(calc(var(--hp, 0) * -6vh));
+  }
+
+  .curtain :global(.badge) { opacity: clamp(0, calc(1 - var(--hp, 0) * 3), 1); }
 
   .count {
     margin-left: 0.5em;
@@ -736,8 +750,6 @@ const statement =
   }
 
   /* --- Selected projects: offset mosaic ---------------------------------- */
-
-  .selected { padding-top: clamp(5rem, 10vw, 9rem); }
 
   .mosaic {
     display: grid;
