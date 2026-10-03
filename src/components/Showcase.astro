@@ -125,8 +125,19 @@ const slides = home.data.slider.map((s) => {
     object-fit: cover;
   }
 
+  /* A dark veil over the photograph, as on the original site, so the
+     caption, the link and the bars read on any image. */
+  .slide::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.38);
+    pointer-events: none;
+  }
+
   .slide__meta {
     position: absolute;
+    z-index: 1;
     top: 28px;
     left: 32px;
     display: flex;
