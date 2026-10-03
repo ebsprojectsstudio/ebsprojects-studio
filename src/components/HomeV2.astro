@@ -100,6 +100,7 @@ const statement =
                       widths={[500, 800, 1240, 1800, 2400]}
                       quality={85}
                       sizes="(max-width: 809px) 96vw, 55vw"
+                      style={p.data.homeZoom ? `--zoom:${p.data.homeZoom}` : undefined}
                       data-fade
                     />
                     <Image
@@ -354,6 +355,10 @@ const statement =
 
   a:hover .swap :global(img:not(.swap__alt)) { transform: scale(1.04); }
 
+  /* A per-project zoom (homeZoom), on its own property so it stacks with
+     the hover and fade-in transforms instead of being replaced by them. */
+  .swap :global(img:not(.swap__alt)) { scale: var(--zoom, 1); }
+
   /* --- Studio statement --------------------------------------------------- */
 
   .studio { padding-top: clamp(4rem, 9vw, 8rem); }
@@ -462,7 +467,7 @@ const statement =
   /* Two rows that answer each other:
 
        1  large 3:2, left, high   2  narrow 4:5, right, low
-       3  wide 3:2, left, high    4  medium 4:3, right, low                 */
+       3  medium 3:2, left, high  4  large square, right, low                */
   .mosaic {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -478,8 +483,8 @@ const statement =
 
   .mosaic :global(.mosaic__item:nth-child(4n + 1)) { --col: 1 / span 7; --ratio: 3 / 2; }
   .mosaic :global(.mosaic__item:nth-child(4n + 2)) { --col: 9 / span 4; --ratio: 4 / 5; --drop: clamp(3rem, 9vw, 8rem); }
-  .mosaic :global(.mosaic__item:nth-child(4n + 3)) { --col: 1 / span 6; --ratio: 3 / 2; }
-  .mosaic :global(.mosaic__item:nth-child(4n))     { --col: 8 / span 5; --ratio: 4 / 3; --drop: clamp(3rem, 9vw, 8rem); }
+  .mosaic :global(.mosaic__item:nth-child(4n + 3)) { --col: 1 / span 5; --ratio: 3 / 2; }
+  .mosaic :global(.mosaic__item:nth-child(4n))     { --col: 7 / span 6; --ratio: 1 / 1; --drop: clamp(3rem, 9vw, 8rem); }
 
   .scard { display: block; }
 

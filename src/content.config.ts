@@ -34,6 +34,9 @@ const projects = defineCollection({
           crop would cut what matters (a title, a face). Falls back to the
           cover. */
       homeImage: image().optional(),
+      /** Optional zoom on that photograph in the mosaic, 1 = none. Tightens
+          the crop on a subject that sits small in the middle of the frame. */
+      homeZoom: z.number().min(1).max(2).optional(),
       /** The scrolling band at the top of the project page. */
       strip: z.array(image()).min(1),
       /** The grid below it. Each slot's span and crop ratio were measured on

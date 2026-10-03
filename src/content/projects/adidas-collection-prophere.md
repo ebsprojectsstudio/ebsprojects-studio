@@ -7,6 +7,7 @@ services:
 order: 8
 cover: "../../assets/images/adidas-prophere-04.jpg"
 thumb: "../../assets/images/adidas-prophere-04.jpg"
+homeZoom: 1.25
 strip:
   - "../../assets/images/adidas-prophere-01.jpg"
   - "../../assets/images/adidas-prophere-02.jpg"

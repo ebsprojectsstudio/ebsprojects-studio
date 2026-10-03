@@ -108,6 +108,17 @@ collections:
           utilisée.
         widget: image
         required: false
+      - name: homeZoom
+        label: Zoom sur l'image de l'accueil (facultatif)
+        hint: >-
+          1 = pas de zoom, 1.2 = 20 % plus serré. Pour resserrer le cadrage sur
+          un objet trop petit au centre de la photo.
+        widget: number
+        value_type: float
+        min: 1
+        max: 2
+        step: 0.05
+        required: false
       - name: strip
         label: Bandeau défilant (haut de la page projet)
         hint: Trois images ou plus. Elles défilent en boucle.
