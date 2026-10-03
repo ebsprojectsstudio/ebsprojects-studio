@@ -456,13 +456,10 @@ const statement =
 
   /* --- Selected projects: offset mosaic ---------------------------------- */
 
-  /* Two rows, the second turned half a circle from the first:
+  /* Two rows that answer each other:
 
-       1  large, left, high       2  narrow, right, low
-       3  narrow, left, high      4  large, right, low
-
-     The large photographs share a crop (3:2), as do the narrow ones (4:5),
-     so the four read as one composition rather than two pairs. */
+       1  large 3:2, left, high   2  narrow 4:5, right, low
+       3  square, left, high      4  medium 4:3, right, low                 */
   .mosaic {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -478,8 +475,8 @@ const statement =
 
   .mosaic :global(.mosaic__item:nth-child(4n + 1)) { --col: 1 / span 7; --ratio: 3 / 2; }
   .mosaic :global(.mosaic__item:nth-child(4n + 2)) { --col: 9 / span 4; --ratio: 4 / 5; --drop: clamp(3rem, 9vw, 8rem); }
-  .mosaic :global(.mosaic__item:nth-child(4n + 3)) { --col: 1 / span 4; --ratio: 4 / 5; }
-  .mosaic :global(.mosaic__item:nth-child(4n))     { --col: 6 / span 7; --ratio: 3 / 2; --drop: clamp(3rem, 9vw, 8rem); }
+  .mosaic :global(.mosaic__item:nth-child(4n + 3)) { --col: 1 / span 6; --ratio: 1 / 1; }
+  .mosaic :global(.mosaic__item:nth-child(4n))     { --col: 8 / span 5; --ratio: 4 / 3; --drop: clamp(3rem, 9vw, 8rem); }
 
   .scard { display: block; }
 
