@@ -200,6 +200,10 @@ const slides = home.data.slider.map((s) => {
   .slider__dot:hover::before { border-color: var(--fg); background: rgba(255, 255, 255, 0.35); }
   .slider__dot[aria-selected='true']::before { border-color: var(--fg); background: var(--fg); }
 
+  /* Keyboard focus: a ring around the circle, not the square button. */
+  .slider__dot:focus-visible { outline: none; }
+  .slider__dot:focus-visible::before { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--fg); }
+
   @media (max-width: 809.98px) {
     .slide__meta { top: 16px; left: 16px; }
     .slide__title { font-size: 1rem; }
