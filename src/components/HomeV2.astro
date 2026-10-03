@@ -8,10 +8,10 @@
  *      "Selected projects" — the CMS's choice, in an offset grid, then a
  *      button to all the projects — slides over it;
  *   2. a short statement and the clients, scrolling;
- *   3. expertises and the process laid out flat, no carousel or accordion;
+ *   3. expertises (rail) and the process (accordion), exactly as on the V1;
  *   4. a closing call to get in touch.
  */
-import { getCollection, getEntry, render } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import type { ImageMetadata } from 'astro';
 import { Image } from 'astro:assets';
@@ -20,7 +20,9 @@ import Reveal from './Reveal.astro';
 import SplitText from './SplitText.astro';
 import ArrowLink from './ArrowLink.astro';
 import Hero from './hero/Hero.astro';
-import { contact, clients, process } from '../data/site';
+import ExpertiseRail from './ExpertiseRail.astro';
+import ProcessSteps from './ProcessSteps.astro';
+import { contact, clients } from '../data/site';
 import { url } from '../lib/url';
 
 interface Props {
@@ -49,13 +51,6 @@ const heroSlides = home.data.hero.slides.length
 const selected = home.data.selected.map((ref) => pick(ref.id));
 
 const expertises = (await getCollection('expertises')).sort((a, b) => a.data.order - b.data.order);
-const expertiseCards = await Promise.all(
-  expertises.map(async (e) => ({
-    entry: e,
-    Content: (await render(e)).Content,
-    count: projects.filter((p) => p.data.services.includes(e.data.service)).length,
-  }))
-);
 
 /** The photograph shown in the mosaic. */
 const main = (p: Project): ImageMetadata => p.data.homeImage ?? p.data.cover;
@@ -187,82 +182,10 @@ const statement =
     </div>
   </section>
 
-  {/* -------------------------------------------------------- Expertises */}
-  <section class="section r-sect" id="expertises" data-reveal>
-    <div class="wrap">
-      <Reveal class="section-head">
-        <SplitText as="h2" text="Expertises" class="label--section" />
-      </Reveal>
+  {/* Expertises and process: the very same components as the V1. */}
+  <ExpertiseRail />
 
-      <ul class="skills">
-        {
-          expertiseCards.map(({ entry, Content, count }, i) => (
-            <li>
-              <Reveal class="r-20" delay={(i % 4) * 0.06}>
-                <a class="skill" href={url(`/projects/expertises/${entry.id}`)}>
-                  <span class="skill__top">
-                    <span class="skill__index">{entry.data.index}</span>
-                    <span class="skill__count">
-                      {count} projet{count > 1 ? 's' : ''}
-                    </span>
-                  </span>
-                  <span class="skill__title">{entry.data.title}</span>
-                  <span class="skill__body">
-                    <Content />
-                  </span>
-                  <span class="skill__go" aria-hidden="true">
-                    <svg width="15" height="11" viewBox="0 0 15 11" fill="none">
-                      <path d="M0 5.5h13M8.5 1l4.5 4.5L8.5 10" stroke="currentColor" stroke-width="1.2" />
-                    </svg>
-                  </span>
-                </a>
-              </Reveal>
-            </li>
-          ))
-        }
-        {/* Seven expertises leave one cell in the four-column grid. */}
-        <li class="skills__extra">
-          <Reveal class="r-20" delay={0.18}>
-            <a class="skill skill--contact" href={url('/contact')}>
-              <span class="skill__top"><span>Sur mesure</span></span>
-              <span class="skill__title">Un besoin spécifique ?</span>
-              <span class="skill__body">
-                Chaque projet est différent. Racontez-moi le vôtre, on construit la réponse ensemble.
-              </span>
-              <span class="skill__go" aria-hidden="true">
-                <svg width="15" height="11" viewBox="0 0 15 11" fill="none">
-                  <path d="M0 5.5h13M8.5 1l4.5 4.5L8.5 10" stroke="currentColor" stroke-width="1.2" />
-                </svg>
-              </span>
-            </a>
-          </Reveal>
-        </li>
-      </ul>
-    </div>
-  </section>
-
-  {/* ----------------------------------------------------------- Process */}
-  <section class="section r-sect" id="process" data-reveal>
-    <div class="wrap">
-      <Reveal class="section-head">
-        <SplitText as="h2" text="Comment se déroule un projet ?" class="label--section" />
-      </Reveal>
-
-      <ol class="steps">
-        {
-          process.map((step, i) => (
-            <li>
-              <Reveal class="step r-30" delay={(i % 3) * 0.08}>
-                <span class="step__num">{pad(i + 1)}</span>
-                <h3 class="step__title">{step.title}</h3>
-                <p class="step__body">{step.body}</p>
-              </Reveal>
-            </li>
-          ))
-        }
-      </ol>
-    </div>
-  </section>
+  <ProcessSteps />
 
   {/* ---------------------------------------------------------------- CTA */}
   <section class="section cta">
@@ -582,121 +505,6 @@ const statement =
   .more__button:hover .more__disc { background: var(--bg); color: var(--fg); }
   .more__button:hover .more__disc svg { transform: translate(2px, -2px); }
 
-  /* --- Expertises: flat grid --------------------------------------------- */
-
-  .skills {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    border-top: 1px solid var(--line-soft);
-    border-left: 1px solid var(--line-soft);
-  }
-
-  .skills > li {
-    border-right: 1px solid var(--line-soft);
-    border-bottom: 1px solid var(--line-soft);
-  }
-
-  .skills :global([data-reveal]) { height: 100%; }
-
-  .skill {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-height: 320px;
-    padding: clamp(1.25rem, 2vw, 1.75rem);
-    transition: background-color 0.4s var(--ease);
-  }
-
-  .skill:hover { background: var(--surface); }
-
-  .skill__top {
-    display: flex;
-    justify-content: space-between;
-    font-size: var(--fs-label);
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--fg-dim);
-  }
-
-  .skill__title {
-    margin-top: 2.25rem;
-    font-size: clamp(1.25rem, 1.7vw, 1.625rem);
-    font-weight: 500;
-    line-height: 1.1;
-    letter-spacing: -0.03em;
-    text-transform: uppercase;
-  }
-
-  .skill__body {
-    display: block;
-    margin-top: 1rem;
-    margin-bottom: 1.5rem;
-    font-size: 0.875rem;
-    line-height: 1.6;
-    color: var(--fg-muted);
-  }
-
-  .skill__body :global(p) { margin: 0; }
-
-  .skill__go {
-    display: grid;
-    place-items: center;
-    width: 32px;
-    height: 32px;
-    margin-top: auto;
-    border-radius: 50%;
-    background: var(--surface);
-    color: var(--fg-muted);
-    transition: background-color 0.35s var(--ease), color 0.35s var(--ease);
-  }
-
-  .skill:hover .skill__go { background: var(--fg); color: var(--bg); }
-
-  .skill--contact { background: var(--surface); }
-  .skill--contact:hover { background: var(--surface-hover); }
-  .skill--contact .skill__go { background: var(--fg); color: var(--bg); }
-
-  /* In two columns, seven plus this one fill four full rows; in one column
-     it would only repeat the closing call. */
-
-  /* --- Process: six steps, laid flat ------------------------------------- */
-
-  .steps {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    column-gap: var(--gap);
-    row-gap: clamp(2.5rem, 5vw, 4rem);
-  }
-
-  .steps :global(.step) {
-    padding-top: 1.25rem;
-    border-top: 1px solid var(--line);
-  }
-
-  .step__num {
-    display: block;
-    font-size: clamp(2.25rem, 4vw, 3.5rem);
-    font-weight: 500;
-    line-height: 1;
-    letter-spacing: -0.05em;
-    color: rgba(255, 255, 255, 0.22);
-  }
-
-  .step__title {
-    margin-top: 1.25rem;
-    font-size: 1.125rem;
-    font-weight: 500;
-    letter-spacing: -0.01em;
-  }
-
-  .step__body {
-    margin-top: 0.6rem;
-    font-size: 0.875rem;
-    font-weight: 300;
-    line-height: 1.65;
-    color: var(--fg-muted);
-  }
-
   /* --- Closing call ------------------------------------------------------- */
 
   .cta {
@@ -749,11 +557,6 @@ const statement =
 
   /* --- Smaller screens ---------------------------------------------------- */
 
-  @media (max-width: 1199.98px) {
-    .skills { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  }
-
   @media (max-width: 809.98px) {
     .studio__grid { grid-template-columns: minmax(0, 1fr); row-gap: 1.25rem; }
     .studio :global(.studio__label),
@@ -771,13 +574,7 @@ const statement =
     .mosaic :global(.mosaic__item:nth-child(n)) { --col: auto; --drop: 0; }
 
 
-    .skills { grid-template-columns: minmax(0, 1fr); }
-    .skills__extra { display: none; }
-    .skill { min-height: 0; }
-    .skill__title { margin-top: 1.25rem; }
-    .skill__go { margin-top: 1.5rem; }
 
-    .steps { grid-template-columns: minmax(0, 1fr); }
   }
 
   @media (prefers-reduced-motion: reduce) {

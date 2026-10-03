@@ -1,0 +1,193 @@
+---
+/**
+ * "Comment se déroule un projet ?": the steps as an exclusive accordion,
+ * as on the original site. Shared by both home pages.
+ */
+import Reveal from './Reveal.astro';
+import SplitText from './SplitText.astro';
+import { process } from '../data/site';
+---
+
+<section class="section" id="process">
+  <div class="wrap">
+    <Reveal>
+      <SplitText as="h2" text={"Comment se déroule un projet ?"} class="label--section process__heading" />
+    </Reveal>
+
+    <div class="process">
+      {
+        process.map((step) => (
+          <Reveal class="r-30">
+            <details class="step" name="process">
+              <summary class="step__summary">
+                <span class="step__index" aria-hidden="true">•</span>
+                <span class="step__title">{step.title}</span>
+                <span class="step__icon" aria-hidden="true" />
+              </summary>
+              <div class="step__panel">
+                <div class="step__inner">
+                  <p class="lead">{step.body}</p>
+                </div>
+              </div>
+            </details>
+          </Reveal>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  /* The expertise rail above and this heading touch on the original. */
+  #process { padding-top: clamp(1.5rem, 3vw, 2.5rem); }
+
+  /* --- Process ----------------------------------------------------------- */
+
+  .process__heading {
+    display: block;
+    max-width: none;
+    font-weight: 500;
+    margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+  }
+
+  .process { border-top: 1px solid var(--line-soft); }
+
+  .step { border-bottom: 1px solid var(--line-soft); }
+
+  .step__summary {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding-block: clamp(1rem, 1.9vw, 1.4rem);
+    cursor: pointer;
+    list-style: none;
+    transition: color 0.3s var(--ease);
+  }
+  .step__summary::-webkit-details-marker { display: none; }
+
+  /* A faint wash bleeding into the gutters, so the whole row reads as the
+     target rather than just the words. */
+  .step__summary::before {
+    content: '';
+    position: absolute;
+    inset: 0 -1rem;
+    background: var(--surface);
+    opacity: 0;
+    transition: opacity 0.35s var(--ease);
+    pointer-events: none;
+  }
+  .step__summary:hover::before { opacity: 1; }
+  .step__summary > * { position: relative; }
+
+  .step__summary:hover .step__icon { color: var(--fg); }
+
+  .step__index {
+    flex: none;
+    font-size: 1.125rem;
+    line-height: 1;
+    color: var(--fg);
+  }
+
+  /* 18px on the original, whatever the window width. */
+  .step__title {
+    flex: 1;
+    font-size: 1.125rem;
+    font-weight: 400;
+  }
+
+  .step__icon {
+    position: relative;
+    flex: none;
+    width: 13px;
+    height: 13px;
+    color: var(--fg-muted);
+  }
+  .step__icon::before,
+  .step__icon::after {
+    content: '';
+    position: absolute;
+    inset: 50% 0 auto 0;
+    height: 1.4px;
+    background: currentColor;
+    transition: transform 0.4s var(--ease);
+  }
+  .step__icon::after { transform: rotate(90deg); }
+  .step.is-open .step__icon::after { transform: rotate(0deg); }
+
+  /* `grid-template-rows: 0fr -> 1fr` tweens to the content's own height with
+     no measuring, which a paused compositor cannot get wrong. */
+  .step__panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.5s var(--spring-smooth);
+  }
+
+  .step.is-open .step__panel { grid-template-rows: 1fr; }
+
+  .step__inner {
+    overflow: hidden;
+    padding-left: 1.5rem;
+    max-width: 68ch;
+  }
+
+  .step__inner > p {
+    padding-bottom: clamp(1.25rem, 2.5vw, 1.85rem);
+    font-size: 0.9375rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .step__panel { transition: none; }
+  }
+
+  @media (max-width: 809.98px) {
+    .step__inner { padding-left: 0; }
+  }
+
+</style>
+
+<script>
+  /* <details> drops its content the instant `open` goes away, so the element
+     is kept open until the closing tween has run. */
+  const init = () => {
+    const steps = [...document.querySelectorAll<HTMLDetailsElement>('.step')];
+    const CLOSE_MS = 520;
+    const closeTimers = new WeakMap<HTMLDetailsElement, number>();
+
+    const openStep = (step: HTMLDetailsElement) => {
+      const pending = closeTimers.get(step);
+      if (pending) { clearTimeout(pending); closeTimers.delete(step); }
+      step.open = true;
+      const grow = () => step.classList.add('is-open');
+      requestAnimationFrame(() => requestAnimationFrame(grow));
+      window.setTimeout(grow, 60);
+    };
+
+    const closeStep = (step: HTMLDetailsElement) => {
+      step.classList.remove('is-open');
+      closeTimers.set(
+        step,
+        window.setTimeout(() => {
+          step.open = false;
+          closeTimers.delete(step);
+        }, CLOSE_MS)
+      );
+    };
+
+    steps.forEach((step) => {
+      if (step.open) step.classList.add('is-open');
+      step.querySelector('.step__summary')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (step.classList.contains('is-open')) {
+          closeStep(step);
+          return;
+        }
+        // Exclusive, like the original.
+        steps.forEach((other) => other !== step && other.classList.contains('is-open') && closeStep(other));
+        openStep(step);
+      });
+    });
+  };
+
+  document.addEventListener('astro:page-load', init);
+</script>
