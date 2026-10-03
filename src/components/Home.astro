@@ -24,7 +24,7 @@ import Hero from './hero/Hero.astro';
 import ExpertiseRail from './ExpertiseRail.astro';
 import ProcessSteps from './ProcessSteps.astro';
 import Showcase from './Showcase.astro';
-import { contact, clients } from '../data/site';
+import { contact, clients, serviceSlugs } from '../data/site';
 import { HERO_STYLES, heroStyles, type HeroStyle } from '../data/hero';
 import { url } from '../lib/url';
 import { edgeColors } from '../lib/edgeColors';
@@ -104,8 +104,8 @@ const statement =
           {
             selected.map((p, i) => (
               <Reveal class="mosaic__item" delay={(i % 2) * 0.12} data-reveal-at="0.85">
-                <a class="scard" href={url(`/projects/${p.id}`)}>
-                  <span class="swap scard__media">
+                <div class="scard">
+                  <a class="swap scard__media" href={url(`/projects/${p.id}`)} tabindex="-1" aria-hidden="true">
                     <span class="swap__inner">
                     <Image
                       src={main(p)}
@@ -133,15 +133,27 @@ const statement =
                       )
                     }
                     </span>
-                  </span>
+                  </a>
                   <span class="scard__caption">
-                    <span class="scard__title">
+                    <a class="scard__title" href={url(`/projects/${p.id}`)}>
                       <span class="scard__index">{pad(i + 1)}</span>
                       <span class="scard__name">{p.data.title}</span>
+                    </a>
+                    {/* Each expertise leads to the page listing its projects. */}
+                    <span class="scard__services">
+                      {p.data.services.map((sv, n) => (
+                        <>
+                          {n > 0 && ', '}
+                          {serviceSlugs[sv] ? (
+                            <a class="scard__service" href={url(`/projects/expertises/${serviceSlugs[sv]}`)}>{sv}</a>
+                          ) : (
+                            sv
+                          )}
+                        </>
+                      ))}
                     </span>
-                    <span class="scard__services">{p.data.services.join(', ')}</span>
                   </span>
-                </a>
+                </div>
               </Reveal>
             ))
           }
@@ -358,13 +370,13 @@ const statement =
       transform 1.2s var(--spring-smooth);
   }
 
-  a:hover .swap :global(.swap__alt),
-  a:focus-visible .swap :global(.swap__alt) {
+  .scard:hover .swap :global(.swap__alt),
+  .scard:focus-within .swap :global(.swap__alt) {
     opacity: 1;
     transform: none;
   }
 
-  a:hover .swap__inner > :global(img:not(.swap__alt)) { transform: scale(1.04); }
+  .scard:hover .swap__inner > :global(img:not(.swap__alt)) { transform: scale(1.04); }
 
   /* A hover photograph shown whole (homeHoverWhole): contained, on its own
      background colour (read from its edges at build time), so the margins
@@ -562,6 +574,10 @@ const statement =
   /* Hover, quietly: the number lights up and the title edges forward. */
   .scard__name { transition: transform 0.6s var(--spring-smooth); }
   .scard:hover .scard__index { color: var(--fg); }
+
+  .scard__service { transition: color 0.3s var(--ease); }
+  .scard__service:hover,
+  .scard__service:focus-visible { color: var(--fg); }
   .scard:hover .scard__name { transform: translateX(4px); }
 
   .scard__services {
