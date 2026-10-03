@@ -11,7 +11,7 @@ services:
 order: 7
 cover: "../../assets/images/loft-babies-cover.jpg"
 thumb: "../../assets/images/loft-babies-thumb.jpg"
-homeHoverImage: "../../assets/images/loft-babies-04.jpg"
+homeHoverImage: "../../assets/images/loft-babies-02.png"
 homeImage: "../../assets/images/loft-babies-thumb.jpg"
 strip:
   - "../../assets/images/loft-babies-01.jpg"
