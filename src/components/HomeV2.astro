@@ -33,10 +33,13 @@ interface Props {
   variant?: HeroStyle;
   /** Shown in the tab title of a preview, e.g. "V1". */
   label?: string;
+  /** Overrides the opening photographs chosen in the CMS: a project id and
+      the photograph to show for it. */
+  slides?: { project: string; image: ImageMetadata }[];
   /** Marks the page as a preview: not indexed. */
   preview?: boolean;
 }
-const { variant: forced, label = 'V2', preview = false } = Astro.props;
+const { variant: forced, label = 'V2', slides: forcedSlides, preview = false } = Astro.props;
 
 type Project = CollectionEntry<'projects'>;
 
@@ -51,7 +54,9 @@ const pick = (id: string) => {
   return p;
 };
 
-const heroSlides = home.data.hero.slides.length
+const heroSlides = forcedSlides
+  ? forcedSlides.map((s) => ({ project: pick(s.project), image: s.image }))
+  : home.data.hero.slides.length
   ? home.data.hero.slides.map((s) => ({ project: pick(s.project.id), image: s.image }))
   : projects.map((p) => ({ project: p, image: p.data.cover }));
 
