@@ -3,7 +3,7 @@
 Plan de sortie de Framer pour `ebsprojects.studio`.
 
 **État au 29 août 2026 :** le site est en ligne sur l'adresse de test
-<https://seguinhugo06-lgtm.github.io/ebsprojects-studio/>. Il reste à basculer
+<https://ebsprojectsstudio.github.io/ebsprojects-studio/>. Il reste à basculer
 le domaine (étapes 4 à 7 ci-dessous).
 
 ## Point de départ
@@ -44,10 +44,10 @@ de 15 Go/mois depuis son passage aux crédits.
 
 ## Ce qui est déjà en place
 
-1. **Dépôt** — <https://github.com/seguinhugo06-lgtm/ebsprojects-studio>
+1. **Dépôt** — <https://github.com/ebsprojectsstudio/ebsprojects-studio>
 2. **Workflow** — `.github/workflows/deploy.yml` reconstruit et republie le site
    à chaque push sur `main`
-3. **Site de test** — <https://seguinhugo06-lgtm.github.io/ebsprojects-studio/>
+3. **Site de test** — <https://ebsprojectsstudio.github.io/ebsprojects-studio/>
 
 ## Étapes restantes
 
@@ -68,7 +68,7 @@ Puis, dans `.github/workflows/deploy.yml`, supprimer les deux lignes du bloc
 `env:` marquées « PHASE DE TEST » :
 
 ```yaml
-          ASTRO_SITE: https://seguinhugo06-lgtm.github.io
+          ASTRO_SITE: https://ebsprojectsstudio.github.io
           ASTRO_BASE: /ebsprojects-studio
 ```
 
@@ -84,7 +84,7 @@ Remplacer **uniquement** les lignes du site web :
 | `A`     | `@`   | `185.199.109.153`             |
 | `A`     | `@`   | `185.199.110.153`             |
 | `A`     | `@`   | `185.199.111.153`             |
-| `CNAME` | `www` | `seguinhugo06-lgtm.github.io` |
+| `CNAME` | `www` | `ebsprojectsstudio.github.io` |
 
 Supprimer les anciennes lignes `A` vers `31.43.160.6` / `31.43.161.6` et le
 `CNAME www` vers `sites.framer.app`.

@@ -5,7 +5,7 @@
 
 backend:
   name: github
-  repo: seguinhugo06-lgtm/ebsprojects-studio
+  repo: ebsprojectsstudio/ebsprojects-studio
   branch: main
   commit_messages:
     create: "Ajoute {{collection}} « {{slug}} »"

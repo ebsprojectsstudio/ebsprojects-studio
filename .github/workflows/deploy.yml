@@ -40,7 +40,7 @@ jobs:
           # lignes et ajouter un fichier `public/CNAME` contenant :
           #     ebsprojects.studio
           # ─────────────────────────────────────────────────────────────
-          ASTRO_SITE: https://seguinhugo06-lgtm.github.io
+          ASTRO_SITE: https://ebsprojectsstudio.github.io
           ASTRO_BASE: /ebsprojects-studio
 
       - uses: actions/upload-pages-artifact@v4

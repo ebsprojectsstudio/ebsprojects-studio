@@ -61,7 +61,7 @@ public/
 ### Sans toucher au code : l'interface d'édition
 
 Le site a une interface d'administration à l'adresse **`/admin`**
-(pendant la phase de test : <https://seguinhugo06-lgtm.github.io/ebsprojects-studio/admin/>).
+(pendant la phase de test : <https://ebsprojectsstudio.github.io/ebsprojects-studio/admin/>).
 Elle s'appuie sur [Sveltia CMS](https://sveltiacms.app) et permet de :
 
 - **ajouter, modifier ou supprimer un projet** — textes, expertises, photos du
@@ -78,7 +78,7 @@ republie tout seul en une à deux minutes. Les photos envoyées sont converties
 en WebP et ramenées à 3200 px au plus.
 
 **Connexion.** Il faut un compte GitHub ayant les droits d'écriture sur le
-dépôt `seguinhugo06-lgtm/ebsprojects-studio`. Sur l'écran de connexion,
+dépôt `ebsprojectsstudio/ebsprojects-studio`. Sur l'écran de connexion,
 choisir *Sign In with Token* : un lien ouvre GitHub avec les bonnes
 autorisations déjà cochées (*Contents : Read and write* sur ce seul dépôt).
 Le jeton est ensuite mémorisé par le navigateur.
@@ -162,7 +162,7 @@ Voir `HEBERGEMENT.md` pour la procédure complète et le choix de l’hébergeur
 
 En résumé : le site est hébergé par GitHub Pages et se republie tout seul à
 chaque `git push` sur `main`. Le site de test tourne sur
-<https://seguinhugo06-lgtm.github.io/ebsprojects-studio/> ; il reste à basculer
+<https://ebsprojectsstudio.github.io/ebsprojects-studio/> ; il reste à basculer
 le domaine.
 
 ## Notes de migration
