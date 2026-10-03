@@ -408,7 +408,7 @@ const statement =
   /* Two rows that answer each other:
 
        1  large 3:2, left, high   2  narrow 4:5, right, low
-       3  medium 3:2, left, high  4  large 5:4, right, low                   */
+       3  medium 4:3, left, high  4  large 5:4, right, low                   */
   .mosaic {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -424,7 +424,7 @@ const statement =
 
   .mosaic :global(.mosaic__item:nth-child(4n + 1)) { --col: 1 / span 7; --ratio: 3 / 2; }
   .mosaic :global(.mosaic__item:nth-child(4n + 2)) { --col: 9 / span 4; --ratio: 4 / 5; --drop: clamp(3rem, 9vw, 8rem); }
-  .mosaic :global(.mosaic__item:nth-child(4n + 3)) { --col: 1 / span 5; --ratio: 3 / 2; }
+  .mosaic :global(.mosaic__item:nth-child(4n + 3)) { --col: 1 / span 5; --ratio: 4 / 3; }
   .mosaic :global(.mosaic__item:nth-child(4n))     { --col: 7 / span 6; --ratio: 5 / 4; --drop: clamp(3rem, 9vw, 8rem); }
 
   .scard { display: block; }
