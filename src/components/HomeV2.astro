@@ -47,6 +47,11 @@ const heroSlides = home.data.hero.slides.length
   : projects.map((p) => ({ project: p, image: p.data.cover }));
 
 const selected = home.data.selected.map((ref) => pick(ref.id));
+/* Two columns, filled alternately, so the order still reads 1-2-3-4 in a
+   zigzag; each keeps its index for the caption and the phone layout. */
+const columns = [0, 1].map((c) =>
+  selected.map((p, i) => ({ p, i })).filter(({ i }) => i % 2 === c)
+);
 
 const expertises = (await getCollection('expertises')).sort((a, b) => a.data.order - b.data.order);
 const expertiseCards = await Promise.all(
@@ -87,8 +92,10 @@ const statement =
 
         <div class="mosaic">
           {
-            selected.map((p, i) => (
-              <Reveal class="mosaic__item">
+            columns.map((col, c) => (
+              <div class:list={['mosaic__col', c ? 'mosaic__col--b' : 'mosaic__col--a']}>
+                {col.map(({ p, i }) => (
+              <Reveal class="mosaic__item" style={`--order:${i}`}>
                 <a class="scard" href={url(`/projects/${p.id}`)}>
                   <span class="swap scard__media">
                     <Image
@@ -117,6 +124,8 @@ const statement =
                   </span>
                 </a>
               </Reveal>
+                ))}
+              </div>
             ))
           }
         </div>
@@ -456,33 +465,34 @@ const statement =
 
   /* --- Selected projects: offset mosaic ---------------------------------- */
 
+  /* Two independent columns rather than rows, so nothing has to line up
+     across them: a wide one on the left, a narrow one on the right that
+     starts lower. Each column pairs a portrait-ish crop with a landscape
+     one, in opposite order, so the four photographs interlock.
+
+       left (7 columns)            right (4 columns, dropped)
+       1  landscape 3:2            2  portrait 4:5
+       3  wide 16:9                4  square                                 */
   .mosaic {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
     column-gap: var(--gap);
-    row-gap: clamp(2.5rem, 4.5vw, 4rem);
     align-items: start;
-    /* Kept modest so the zigzag reads without lengthening the page. */
-    --drop-lg: clamp(2.5rem, 7vw, 6rem);
   }
 
-  /* Four placements. The first row zigzags: a large landscape top left,
-     a tall portrait dropped on the right. The second row answers it with
-     calm: two photographs side by side, tops and bottoms aligned — the
-     crops (16:9 over seven columns, 5:4 over five) give both the same
-     height.
-
-       1  large, left             2  tall, right, dropped
-       3  landscape, left         4  landscape, right, same height          */
-  .mosaic :global(.mosaic__item) {
-    grid-column: var(--col);
-    margin-top: var(--drop, 0);
+  .mosaic__col {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.5rem, 4.5vw, 4rem);
   }
 
-  .mosaic :global(.mosaic__item:nth-child(4n + 1)) { --col: 1 / span 7;  --ratio: 3 / 2; }
-  .mosaic :global(.mosaic__item:nth-child(4n + 2)) { --col: 9 / span 4;  --ratio: 4 / 5; --drop: var(--drop-lg); }
-  .mosaic :global(.mosaic__item:nth-child(4n + 3)) { --col: 1 / span 7;  --ratio: 16 / 9; }
-  .mosaic :global(.mosaic__item:nth-child(4n))     { --col: 8 / span 5;  --ratio: 5 / 4; }
+  .mosaic__col--a { grid-column: 1 / span 7; }
+  .mosaic__col--b { grid-column: 9 / span 4; padding-top: clamp(3rem, 9vw, 8rem); }
+
+  .mosaic__col--a :global(.mosaic__item:nth-child(odd)) { --ratio: 3 / 2; }
+  .mosaic__col--a :global(.mosaic__item:nth-child(even)) { --ratio: 16 / 9; }
+  .mosaic__col--b :global(.mosaic__item:nth-child(odd)) { --ratio: 4 / 5; }
+  .mosaic__col--b :global(.mosaic__item:nth-child(even)) { --ratio: 1 / 1; }
 
   .scard { display: block; }
 
@@ -746,9 +756,10 @@ const statement =
        project is listed further down anyway. */
     .section-head :global(.arrow-link) { display: none; }
 
-    /* One column: the formats alternate, nothing is dropped. */
-    .mosaic { grid-template-columns: minmax(0, 1fr); }
-    .mosaic :global(.mosaic__item:nth-child(n)) { --col: auto; --drop: 0; }
+    /* One column, back in reading order, nothing dropped. */
+    .mosaic { display: flex; flex-direction: column; gap: 2.5rem; }
+    .mosaic__col { display: contents; }
+    .mosaic :global(.mosaic__item) { order: var(--order); }
 
 
     .skills { grid-template-columns: minmax(0, 1fr); }
