@@ -463,31 +463,25 @@ const statement =
     align-items: start;
     /* Kept modest so the zigzag reads without lengthening the page. */
     --drop-lg: clamp(2.5rem, 7vw, 6rem);
-    --drop-sm: clamp(1.5rem, 3.5vw, 3rem);
   }
 
-  /* A sequence of eight placements, two per row, so every project gets its
-     own format while the page keeps one rhythm: the same 12 columns, the
-     same gaps, the same captions. Each slot sets its columns, its crop and
-     how far it drops below the top of its row.
+  /* Four placements, the second row turned half a circle from the first:
+     a large landscape top left and a tall portrait dropped on the right,
+     then a tall portrait dropped on the left and a large landscape on the
+     right. The two landscapes share a crop, as do the two portraits, so the
+     four read as one composition.
 
-       1  wide, left              2  tall, right, dropped
-       3  landscape, left         4  wide and low, right, slightly dropped
-       5  tall, left, dropped     6  wide, right (the first row, mirrored)
-       7  square, left            8  landscape, right, slightly dropped     */
+       1  large, left             2  tall, right, dropped
+       3  tall, left, dropped     4  large, right                           */
   .mosaic :global(.mosaic__item) {
     grid-column: var(--col);
     margin-top: var(--drop, 0);
   }
 
-  .mosaic :global(.mosaic__item:nth-child(8n + 1)) { --col: 1 / span 7;  --ratio: 4 / 3; }
-  .mosaic :global(.mosaic__item:nth-child(8n + 2)) { --col: 9 / span 4;  --ratio: 4 / 5; --drop: var(--drop-lg); }
-  .mosaic :global(.mosaic__item:nth-child(8n + 3)) { --col: 1 / span 5;  --ratio: 3 / 2; }
-  .mosaic :global(.mosaic__item:nth-child(8n + 4)) { --col: 7 / span 6;  --ratio: 16 / 9; --drop: var(--drop-sm); }
-  .mosaic :global(.mosaic__item:nth-child(8n + 5)) { --col: 1 / span 4;  --ratio: 4 / 5; --drop: var(--drop-lg); }
-  .mosaic :global(.mosaic__item:nth-child(8n + 6)) { --col: 6 / span 7;  --ratio: 4 / 3; }
-  .mosaic :global(.mosaic__item:nth-child(8n + 7)) { --col: 2 / span 4;  --ratio: 1 / 1; }
-  .mosaic :global(.mosaic__item:nth-child(8n))     { --col: 7 / span 6;  --ratio: 3 / 2; --drop: var(--drop-sm); }
+  .mosaic :global(.mosaic__item:nth-child(4n + 1)) { --col: 1 / span 7;  --ratio: 3 / 2; }
+  .mosaic :global(.mosaic__item:nth-child(4n + 2)) { --col: 9 / span 4;  --ratio: 4 / 5; --drop: var(--drop-lg); }
+  .mosaic :global(.mosaic__item:nth-child(4n + 3)) { --col: 1 / span 4;  --ratio: 4 / 5; --drop: var(--drop-lg); }
+  .mosaic :global(.mosaic__item:nth-child(4n))     { --col: 6 / span 7;  --ratio: 3 / 2; }
 
   .scard { display: block; }
 
@@ -751,11 +745,9 @@ const statement =
        project is listed further down anyway. */
     .section-head :global(.arrow-link) { display: none; }
 
-    /* One column: the formats stay varied, the low one is opened up so
-       it is not a sliver, and nothing is dropped. */
+    /* One column: the formats alternate, nothing is dropped. */
     .mosaic { grid-template-columns: minmax(0, 1fr); }
     .mosaic :global(.mosaic__item:nth-child(n)) { --col: auto; --drop: 0; }
-    .mosaic :global(.mosaic__item:nth-child(8n + 4)) { --ratio: 3 / 2; }
 
 
     .skills { grid-template-columns: minmax(0, 1fr); }

@@ -19,10 +19,10 @@ hero:
     - project: adidas-collection-pod
       image: ../../assets/images/adidas-pod-02.jpg
 selected:
+  - terra-delyssa
   - black-white-burger
   - loft-babies-laurent-garnier-goes-disco
   - adidas-collection-prophere
-  - beer-factory
 slider:
   - project: adidas-collection-prophere
     image: ../../assets/images/adidas-prophere-07.jpg
