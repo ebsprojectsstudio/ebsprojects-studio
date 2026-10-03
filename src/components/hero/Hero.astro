@@ -68,10 +68,10 @@ const offsets = lines.map((_, i) => lines.slice(0, i).join(' ').split(' ').filte
             <defs>
               <path id="badge-arc" d="M50,50 m-34,0 a34,34 0 1,1 68,0 a34,34 0 1,1 -68,0" />
             </defs>
+            {/* textLength = the circle's circumference (2π × 34), so the words
+                close the ring exactly whatever the font, with no gap. */}
             <text>
-              <textPath href="#badge-arc" startOffset="0">
-                Welcome • Discover • Scroll •&nbsp;
-              </textPath>
+              <textPath href="#badge-arc" startOffset="0" textLength="213.6" lengthAdjust="spacing">Welcome • Discover • Scroll •&nbsp;</textPath>
             </text>
           </svg>
         </a>
@@ -149,7 +149,9 @@ const offsets = lines.map((_, i) => lines.slice(0, i).join(' ').split(' ').filte
 
   .badge__ring text {
     font-size: 8px;
-    letter-spacing: 0.205em;
+    /* Close to the spacing that fills the ring, for any browser that
+       ignores textLength. */
+    letter-spacing: 0.3em;
     text-transform: uppercase;
     fill: currentColor;
   }
