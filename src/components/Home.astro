@@ -71,6 +71,21 @@ const alt = (p: Project): ImageMetadata => {
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
+/** Where each client name in the scrolling list leads (Adidas: Prophere).
+    A client with no project page stays plain text. */
+const clientProjects: Record<string, string> = {
+  Adidas: 'adidas-collection-prophere',
+  Epeda: 'epeda-collection-dedicace',
+  'Loft Babies': 'loft-babies-laurent-garnier-goes-disco',
+  'Black & White Burger': 'black-white-burger',
+  Heineken: 'beer-factory',
+  'La Mort Subite': 'mort-subite-lambic-botanic',
+  'Terra Delyssa': 'terra-delyssa',
+};
+for (const id of Object.values(clientProjects)) {
+  if (!byId.has(id)) throw new Error(`clientProjects names a project that does not exist: "${id}"`);
+}
+
 /* Hover photographs shown whole sit on their own background colour,
    read from the photograph's top and bottom edges. */
 const wholeFill = new Map<string, string>();
@@ -208,7 +223,13 @@ const statement =
           [0, 1].map((copy) => (
             <ul class="marquee__group" aria-hidden={copy === 1 ? 'true' : undefined}>
               {clients.map((c) => (
-                <li class="marquee__item">{c}</li>
+                <li class="marquee__item">
+                  {clientProjects[c] ? (
+                    <a href={url(`/projects/${clientProjects[c]}`)} tabindex={copy === 1 ? -1 : undefined}>{c}</a>
+                  ) : (
+                    c
+                  )}
+                </li>
               ))}
             </ul>
           ))
