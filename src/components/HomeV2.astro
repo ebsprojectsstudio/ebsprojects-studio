@@ -57,10 +57,13 @@ const expertiseCards = await Promise.all(
   }))
 );
 
+/** The photograph shown in the mosaic. */
+const main = (p: Project): ImageMetadata => p.data.homeImage ?? p.data.cover;
+
 /** A second photograph, shown when the card is hovered. */
 const alt = (p: Project): ImageMetadata => {
-  const pool = [p.data.thumb, ...p.data.strip, ...p.data.grid.map((g) => g.src)];
-  return pool.find((img) => img.src !== p.data.cover.src) ?? p.data.cover;
+  const pool = [p.data.cover, p.data.thumb, ...p.data.strip, ...p.data.grid.map((g) => g.src)];
+  return pool.find((img) => img.src !== main(p).src) ?? main(p);
 };
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -92,7 +95,7 @@ const statement =
                 <a class="scard" href={url(`/projects/${p.id}`)}>
                   <span class="swap scard__media">
                     <Image
-                      src={p.data.cover}
+                      src={main(p)}
                       alt={p.data.title}
                       widths={[500, 800, 1240, 1800, 2400]}
                       quality={85}
@@ -459,7 +462,7 @@ const statement =
   /* Two rows that answer each other:
 
        1  large 3:2, left, high   2  narrow 4:5, right, low
-       3  square, left, high      4  medium 4:3, right, low                 */
+       3  wide 3:2, left, high    4  medium 4:3, right, low                 */
   .mosaic {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -475,7 +478,7 @@ const statement =
 
   .mosaic :global(.mosaic__item:nth-child(4n + 1)) { --col: 1 / span 7; --ratio: 3 / 2; }
   .mosaic :global(.mosaic__item:nth-child(4n + 2)) { --col: 9 / span 4; --ratio: 4 / 5; --drop: clamp(3rem, 9vw, 8rem); }
-  .mosaic :global(.mosaic__item:nth-child(4n + 3)) { --col: 1 / span 6; --ratio: 1 / 1; }
+  .mosaic :global(.mosaic__item:nth-child(4n + 3)) { --col: 1 / span 6; --ratio: 3 / 2; }
   .mosaic :global(.mosaic__item:nth-child(4n))     { --col: 8 / span 5; --ratio: 4 / 3; --drop: clamp(3rem, 9vw, 8rem); }
 
   .scard { display: block; }

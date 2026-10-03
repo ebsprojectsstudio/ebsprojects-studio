@@ -30,6 +30,10 @@ const projects = defineCollection({
       cover: image(),
       /** Alternate crop used in the expertise listings. */
       thumb: image(),
+      /** Optional photograph for the home page mosaic, when the cover's
+          crop would cut what matters (a title, a face). Falls back to the
+          cover. */
+      homeImage: image().optional(),
       /** The scrolling band at the top of the project page. */
       strip: z.array(image()).min(1),
       /** The grid below it. Each slot's span and crop ratio were measured on

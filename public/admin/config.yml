@@ -100,6 +100,14 @@ collections:
       - name: thumb
         label: Image des pages d'expertise
         widget: image
+      - name: homeImage
+        label: Image de l'accueil (facultatif)
+        hint: >-
+          À utiliser quand l'image principale, recadrée sur l'accueil, coupe
+          un titre ou un détail important. Sinon, l'image principale est
+          utilisée.
+        widget: image
+        required: false
       - name: strip
         label: Bandeau défilant (haut de la page projet)
         hint: Trois images ou plus. Elles défilent en boucle.
