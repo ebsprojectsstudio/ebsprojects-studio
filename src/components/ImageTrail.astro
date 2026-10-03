@@ -10,22 +10,10 @@
  *  ambient  Added at the studio's request so the hero is alive before anyone
  *           moves the mouse: images bloom by themselves around the title,
  *           never on top of it. It steps aside while the pointer is drawing a
- *           trail, and stops when it is scrolled away or the tab hidden.
- *
- * Used behind the hero title and, on the new home page, behind "Parlons-en".
- * Any number can sit on a page; each keeps clear of the element marked
- * `data-trail-avoid` beside it (the hero title by default).
+ *           trail, and stops when the hero is scrolled away or the tab hidden.
  */
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
-
-interface Props {
-  /** Room kept free at the top and bottom for ambient images, in px —
-      under the menu bar and above the scroll badge in the hero. */
-  clearTop?: number;
-  clearBottom?: number;
-}
-const { clearTop = 96, clearBottom = 150 } = Astro.props;
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
 
@@ -37,7 +25,7 @@ const sources = [
 ].filter(({ img }) => (seen.has(img.src) ? false : (seen.add(img.src), true)));
 ---
 
-<div class="trail" data-trail data-clear-top={clearTop} data-clear-bottom={clearBottom} aria-hidden="true">
+<div class="trail" data-trail aria-hidden="true">
   <div class="trail__pool" data-trail-pool>
     {
       sources.map(({ img, alt }) => (
@@ -124,33 +112,36 @@ const sources = [
 </style>
 
 <script>
-  /* Timers and listeners are module-level so a client-side navigation can
-     clear them; left running, they would keep spawning into detached nodes. */
-  let cleanups: (() => void)[] = [];
+  /* Timers are module-level so a client-side navigation can clear them;
+     left running, they would keep spawning into a detached node. */
+  let ambientTimer = 0;
+  let onScroll: (() => void) | null = null;
 
   const teardown = () => {
-    cleanups.forEach((fn) => fn());
-    cleanups = [];
+    if (ambientTimer) clearInterval(ambientTimer);
+    ambientTimer = 0;
+    if (onScroll) window.removeEventListener('scroll', onScroll);
+    onScroll = null;
   };
 
   document.addEventListener('astro:before-swap', teardown);
 
-  const setup = (host: HTMLElement) => {
-    const pool = host.querySelector<HTMLElement>('[data-trail-pool]');
-    if (!pool) return;
+  const init = () => {
+    teardown();
+
+    const host = document.querySelector<HTMLElement>('[data-trail]');
+    const pool = document.querySelector<HTMLElement>('[data-trail-pool]');
+    if (!host || !pool) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const templates = [...pool.querySelectorAll<HTMLElement>('.trail__item')];
     if (!templates.length) return;
 
-    // The pool is lazy so the page paints first; warm it once the page is in.
+    // The pool is lazy so the hero paints first; warm it once the page is in.
     const warm = () => pool.querySelectorAll('img').forEach((img) => (img.loading = 'eager'));
     if (document.readyState === 'complete') warm();
     else window.addEventListener('load', warm, { once: true });
 
-    const stage = host.parentElement;
-    const inHero = !!host.closest('[data-hero]');
-    const clearTop = Number(host.dataset.clearTop) || 0;
-    const clearBottom = Number(host.dataset.clearBottom) || 0;
     let next = 0;
 
     const spawn = (x: number, y: number, ambient: boolean) => {
@@ -181,70 +172,66 @@ const sources = [
     let lastY: number | null = null;
     let lastPointer = 0;
 
-    if (stage && window.matchMedia('(pointer: fine)').matches) {
-      const onMove = (e: PointerEvent) => {
-        if (e.pointerType !== 'mouse') return;
-        lastPointer = performance.now();
-        const rect = host.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        if (lastX === null || lastY === null) {
+    if (window.matchMedia('(pointer: fine)').matches) {
+      host.parentElement?.addEventListener(
+        'pointermove',
+        (e) => {
+          if (e.pointerType !== 'mouse') return;
+          lastPointer = performance.now();
+          const rect = host.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          if (lastX === null || lastY === null) {
+            lastX = x;
+            lastY = y;
+            return;
+          }
+          if (Math.hypot(x - lastX, y - lastY) < FREQUENCY) return;
           lastX = x;
           lastY = y;
-          return;
-        }
-        if (Math.hypot(x - lastX, y - lastY) < FREQUENCY) return;
-        lastX = x;
-        lastY = y;
-        spawn(x, y, false);
-      };
-      stage.addEventListener('pointermove', onMove, { passive: true });
-      cleanups.push(() => stage.removeEventListener('pointermove', onMove));
+          spawn(x, y, false);
+        },
+        { passive: true }
+      );
     }
 
     /* --- Ambient ---------------------------------------------------------- */
-    const avoid = stage?.querySelector<HTMLElement>('[data-trail-avoid], [data-hero-title]');
+    const title = host.parentElement?.querySelector<HTMLElement>('[data-hero-title]');
+    let heroVisible = true;
 
-    /* The hero is pinned, so it counts as gone once the page has scrolled
-       most of a screen; anywhere else, while any of it is on screen. */
-    const onScreen = () => {
-      if (inHero) return window.scrollY < window.innerHeight * 0.85;
-      const r = host.getBoundingClientRect();
-      return r.bottom > 0 && r.top < window.innerHeight;
+    onScroll = () => {
+      heroVisible = window.scrollY < window.innerHeight * 0.85;
     };
+    window.addEventListener('scroll', onScroll, { passive: true });
 
-    /** The box to keep clear: for the hero title, the union of its word
-        boxes (the heading is a full-width block, the wording is not). */
-    const avoidBox = () => {
-      if (!avoid) return null;
-      const words = avoid.matches('[data-hero-title]') ? [...avoid.querySelectorAll<HTMLElement>('.tok')] : [];
-      if (!words.length) return avoid.getBoundingClientRect();
-      return words.reduce(
-        (u, w) => {
-          const r = w.getBoundingClientRect();
-          return {
-            left: Math.min(u.left, r.left),
-            right: Math.max(u.right, r.right),
-            top: Math.min(u.top, r.top),
-            bottom: Math.max(u.bottom, r.bottom),
-          };
-        },
-        { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity }
-      );
-    };
-
-    /** A random point that keeps the whole image clear of the avoided
-        element and of the reserved bands at the top and bottom. */
+    /** A random point in the hero that keeps the whole image clear of the
+        title, the menu bar above and the scroll badge below. */
     const freeSpot = () => {
       const box = host.getBoundingClientRect();
-      const t = avoidBox();
+      /* The heading is a full-width block; what must stay clear is the
+         wording itself, so take the union of its word boxes. */
+      const words = title ? [...title.querySelectorAll<HTMLElement>('.tok')] : [];
+      const t = words.length
+        ? words.reduce(
+            (u, w) => {
+              const r = w.getBoundingClientRect();
+              return {
+                left: Math.min(u.left, r.left),
+                right: Math.max(u.right, r.right),
+                top: Math.min(u.top, r.top),
+                bottom: Math.max(u.bottom, r.bottom),
+              };
+            },
+            { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity }
+          )
+        : title?.getBoundingClientRect();
       const small = window.matchMedia('(max-width: 809.98px)').matches;
       const halfW = small ? 60 : 90;
       const halfH = small ? 77 : 115;
       const xMin = halfW + 16;
       const xMax = box.width - halfW - 16;
-      const yMin = clearTop + halfH;
-      const yMax = box.height - clearBottom - halfH;
+      const yMin = 96 + halfH; // under the header
+      const yMax = box.height - 150 - halfH; // above the badge
       if (xMax <= xMin || yMax <= yMin) return null;
       for (let tries = 0; tries < 16; tries++) {
         const x = xMin + Math.random() * (xMax - xMin);
@@ -262,20 +249,13 @@ const sources = [
       return null;
     };
 
-    const timer = window.setInterval(() => {
-      if (document.hidden || !onScreen()) return;
+    ambientTimer = window.setInterval(() => {
+      if (document.hidden || !heroVisible) return;
       // Leave the stage to the reader while they are drawing a trail.
       if (performance.now() - lastPointer < 2500) return;
       const spot = freeSpot();
       if (spot) spawn(spot.x, spot.y, true);
     }, 1100);
-    cleanups.push(() => clearInterval(timer));
-  };
-
-  const init = () => {
-    teardown();
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    document.querySelectorAll<HTMLElement>('[data-trail]').forEach(setup);
   };
 
   /* Only via the event: ClientRouter fires `astro:page-load` on the first

@@ -21,7 +21,6 @@ import Reveal from './Reveal.astro';
 import SplitText from './SplitText.astro';
 import ArrowLink from './ArrowLink.astro';
 import Hero from './hero/Hero.astro';
-import ImageTrail from './ImageTrail.astro';
 import ExpertiseRail from './ExpertiseRail.astro';
 import ProcessSteps from './ProcessSteps.astro';
 import Showcase from './Showcase.astro';
@@ -200,11 +199,8 @@ const statement =
   <ProcessSteps />
 
   {/* ---------------------------------------------------------------- CTA */}
-  {/* The same photograph trail as the V1 opening, behind the closing call:
-      images bloom around the wording by themselves and follow the mouse. */}
   <section class="section cta">
-    <ImageTrail clearTop={24} clearBottom={24} />
-    <div class="wrap cta__inner" data-trail-avoid>
+    <div class="wrap">
       <Reveal>
         <p class="label cta__kicker">Un projet en tête ?</p>
       </Reveal>
@@ -526,23 +522,9 @@ const statement =
 
   /* --- Closing call ------------------------------------------------------- */
 
-  /* A full stage, so the trail has room to bloom around the wording. */
   .cta {
-    position: relative;
-    display: grid;
-    place-items: center;
-    min-height: clamp(560px, 92svh, 960px);
-    padding: clamp(4rem, 8vw, 6rem) var(--gutter);
-    overflow: hidden;
+    padding-block: clamp(5rem, 12vw, 10rem) clamp(3rem, 6vw, 5rem);
     text-align: center;
-  }
-
-  /* Shrinks to the wording, so the trail keeps clear of just that. */
-  .cta__inner {
-    position: relative;
-    z-index: 1;
-    width: auto;
-    padding-inline: 0;
   }
 
   .cta__kicker { margin-bottom: 1.25rem; }
