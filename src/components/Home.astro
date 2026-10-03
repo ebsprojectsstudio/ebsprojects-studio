@@ -274,7 +274,11 @@ const statement =
   /* No blur here: the opening screen — photographs and title — sinks into
      black as the page scrolls, a veil that deepens until it is opaque by
      the time the projects reach the middle of the screen. */
-  .curtain :global(.hero__stage) { filter: none; opacity: 1; }
+  .curtain :global(.hero__stage) {
+    filter: none;
+    opacity: 1;
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
 
   .curtain :global([data-hero])::after {
     content: '';
@@ -284,10 +288,15 @@ const statement =
     background: #000;
     opacity: clamp(0, calc(var(--hp, 0) * 1.4), 1);
     pointer-events: none;
+    /* The scroll position arrives in steps (a wheel notch, a trackpad
+       flick); easing each change makes the darkening glide between them. */
+    transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity;
   }
 
   .curtain :global(.hero__inner) {
     transform: translateY(calc(var(--hp, 0) * -6vh));
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .curtain :global(.badge) { opacity: clamp(0, calc(1 - var(--hp, 0) * 3), 1); }
