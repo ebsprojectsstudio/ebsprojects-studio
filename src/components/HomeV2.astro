@@ -326,7 +326,7 @@ const statement =
      The hero is pinned (sticky, in Hero.astro) and publishes its scroll
      progress as --hp, 0 -> 1 over the first screen. "Selected projects"
      has no background of its own, so its photographs slide over the title;
-     the wording lifts and fades out as they cross it. */
+     the title and the photographs of the opening fade out as they cross. */
 
   .curtain { position: relative; }
 
@@ -336,8 +336,13 @@ const statement =
     padding-top: var(--section-y);
   }
 
+  /* The whole opening screen — title and the photographs around it —
+     fades out together, gone by the time the projects reach the middle. */
+  .curtain :global(.hero__stage) {
+    opacity: clamp(0, calc(1 - var(--hp, 0) * 1.4), 1);
+  }
+
   .curtain :global(.hero__inner) {
-    opacity: clamp(0, calc(1 - var(--hp, 0) * 1.2), 1);
     transform: translateY(calc(var(--hp, 0) * -6vh));
   }
 
@@ -498,15 +503,33 @@ const statement =
     align-items: start;
   }
 
-  /* Every pair the same way: a wide photograph on the left, a tall one on
-     the right, dropped lower — the eye zigzags down the page. */
-  .mosaic :global(.mosaic__item:nth-child(odd)) { grid-column: 1 / span 7; }
-  .mosaic :global(.mosaic__item:nth-child(even)) { grid-column: 9 / span 4; margin-top: clamp(4rem, 14vw, 13rem); }
+  /* A sequence of eight placements, so every project gets its own format
+     while the page keeps one rhythm: the same 12 columns, the same gaps,
+     the same captions. Each slot sets its columns, its crop and how far it
+     drops below the top of its row.
+
+       1  wide, left              2  tall, right, dropped
+       3  wide and low, set off-centre
+       4  tall, left, dropped     5  wide, right (the first row, mirrored)
+       6  square, left            7  landscape, right, slightly dropped
+       8  landscape, centred                                                */
+  .mosaic :global(.mosaic__item) {
+    grid-column: var(--col);
+    margin-top: var(--drop, 0);
+  }
+
+  .mosaic :global(.mosaic__item:nth-child(8n + 1)) { --col: 1 / span 7;  --ratio: 4 / 3; }
+  .mosaic :global(.mosaic__item:nth-child(8n + 2)) { --col: 9 / span 4;  --ratio: 4 / 5; --drop: clamp(4rem, 14vw, 13rem); }
+  .mosaic :global(.mosaic__item:nth-child(8n + 3)) { --col: 4 / span 7;  --ratio: 2 / 1; }
+  .mosaic :global(.mosaic__item:nth-child(8n + 4)) { --col: 1 / span 4;  --ratio: 4 / 5; --drop: clamp(4rem, 14vw, 13rem); }
+  .mosaic :global(.mosaic__item:nth-child(8n + 5)) { --col: 6 / span 7;  --ratio: 3 / 2; }
+  .mosaic :global(.mosaic__item:nth-child(8n + 6)) { --col: 1 / span 5;  --ratio: 1 / 1; }
+  .mosaic :global(.mosaic__item:nth-child(8n + 7)) { --col: 7 / span 6;  --ratio: 3 / 2; --drop: clamp(2rem, 7vw, 6rem); }
+  .mosaic :global(.mosaic__item:nth-child(8n))     { --col: 3 / span 8;  --ratio: 16 / 9; }
 
   .scard { display: block; }
 
-  .mosaic :global(.mosaic__item:nth-child(odd)) .scard__media { aspect-ratio: 4 / 3; }
-  .mosaic :global(.mosaic__item:nth-child(even)) .scard__media { aspect-ratio: 4 / 5; }
+  .scard__media { aspect-ratio: var(--ratio, 4 / 3); }
 
   .scard__caption {
     display: flex;
@@ -809,9 +832,11 @@ const statement =
        project is listed further down anyway. */
     .section-head :global(.arrow-link) { display: none; }
 
+    /* One column: the formats stay varied, the low one is opened up so
+       it is not a sliver, and nothing is dropped. */
     .mosaic { grid-template-columns: minmax(0, 1fr); }
-    .mosaic :global(.mosaic__item) { grid-column: auto !important; margin-top: 0 !important; }
-    .mosaic :global(.mosaic__item) .scard__media { aspect-ratio: 4 / 3 !important; }
+    .mosaic :global(.mosaic__item:nth-child(n)) { --col: auto; --drop: 0; }
+    .mosaic :global(.mosaic__item:nth-child(8n + 3)) { --ratio: 3 / 2; }
 
     .row { grid-template-columns: 2.25rem minmax(0, 1fr) 1.25rem; gap: 0.9rem; }
     .index:hover .row { opacity: 1; }
