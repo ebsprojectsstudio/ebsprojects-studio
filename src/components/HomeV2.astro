@@ -71,9 +71,8 @@ const statement =
 
 <Base title={preview ? 'Aperçu — Accueil V2' : undefined} noindex={preview}>
   {/*
-    The hero stays pinned while "Selected projects" rises over it. The
-    section is see-through, so the photographs pass over the title, which
-    fades out as they come.
+    The hero stays pinned while "Selected projects" rises over it on a grey
+    panel, as on the V1; the title fades out as it comes.
   */}
   <div class="curtain">
     <Hero variant={home.data.hero.style} slides={heroSlides} />
@@ -285,15 +284,17 @@ const statement =
   /* --- Curtain ------------------------------------------------------------
      The hero is pinned (sticky, in Hero.astro) and publishes its scroll
      progress as --hp, 0 -> 1 over the first screen. "Selected projects"
-     has no background of its own, so its photographs slide over the title;
-     the title and the photographs of the opening fade out as they cross. */
+     rises over it on its grey panel, as on the V1, while the title and the
+     photographs of the opening fade out. */
 
   .curtain { position: relative; }
 
+  /* The grey panel that rises over the pinned hero, as on the V1. */
   .selected {
     position: relative;
     z-index: 1;
     padding-top: var(--section-y);
+    background: var(--bg-panel);
   }
 
   /* The whole opening screen — title and the photographs around it —
