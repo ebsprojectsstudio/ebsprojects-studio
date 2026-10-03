@@ -29,11 +29,11 @@
   --tracking-nav: 0.12em;
 
   /* Layout */
-  /* The original site has no max-width: content is simply the viewport less
-     the gutters, so wide screens get wider pages. */
-  /* 80px from tablet width up, as on the original — it does not shrink
-     with the window; phones get their own, narrower margin below. */
-  --gutter: 5rem;
+  /* As on the original: 80px from tablet width up, and beyond that the
+     content stops at 1540px wide and centres, so the margins grow on wide
+     screens (165px at 1870). Phones get their own, narrower margin below. */
+  --content-max: 1540px;
+  --gutter: max(5rem, calc((100vw - var(--content-max)) / 2));
   --gap: clamp(1rem, 2.8vw, 2.5rem);
   /* ~88px at 1440, so two adjacent sections leave ~175px between them —
      the gap measured on the original. */
