@@ -4,28 +4,24 @@
  * of projects behind the title. Not indexed.
  *
  * Its photographs are chosen here, not in the CMS, so they stay specific to
- * this version: one per project, landscape, alternating dark and light, with
- * room in the middle for the title.
+ * this version — the studio's selection, in its order.
  */
 import HomeV2 from '../../components/HomeV2.astro';
 import epeda from '../../assets/images/epeda-04.jpg';
 import mortSubite from '../../assets/images/mort-subite-04.jpg';
-import loftBabies from '../../assets/images/loft-babies-thumb.jpg';
-import blackWhite from '../../assets/images/black-white-burger-02.jpg';
-import beerFactory from '../../assets/images/beer-factory-02.jpg';
-import adidasPod from '../../assets/images/adidas-pod-02.jpg';
-import terraDelyssa from '../../assets/images/terra-delyssa-01.jpg';
+import blackWhitePackaging from '../../assets/images/black-white-burger-cover.jpg';
+import blackWhiteWindow from '../../assets/images/black-white-burger-05.jpg';
 import adidasProphere from '../../assets/images/adidas-prophere-05.jpg';
+import terraDelyssa from '../../assets/images/terra-delyssa-01.jpg';
 
 const slides = [
-  { project: 'epeda-collection-dedicace', image: epeda },
   { project: 'mort-subite-lambic-botanic', image: mortSubite },
-  { project: 'loft-babies-laurent-garnier-goes-disco', image: loftBabies },
-  { project: 'black-white-burger', image: blackWhite },
-  { project: 'beer-factory', image: beerFactory },
-  { project: 'adidas-collection-pod', image: adidasPod },
-  { project: 'terra-delyssa', image: terraDelyssa },
+  /* Black & White twice: the packaging, then the shop-window graphics. */
+  { project: 'black-white-burger', image: blackWhitePackaging },
+  { project: 'black-white-burger', image: blackWhiteWindow },
   { project: 'adidas-collection-prophere', image: adidasProphere },
+  { project: 'terra-delyssa', image: terraDelyssa },
+  { project: 'epeda-collection-dedicace', image: epeda },
 ];
 ---
 
