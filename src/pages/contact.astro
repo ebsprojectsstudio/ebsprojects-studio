@@ -6,7 +6,7 @@ import { contact, contactForm, socials, site } from '../data/site';
 import { SERVICES } from '../content.config';
 import { url } from '../lib/url';
 
-/* Without JavaScript the form posts normally and FormSubmit sends the visitor
+/* Without JavaScript the form posts normally and Web3Forms sends the visitor
    back here; that return address has to be absolute. */
 const returnTo = new URL(`${url('/contact')}?envoye=1`, Astro.site ?? site.url).href;
 ---
@@ -65,12 +65,13 @@ const returnTo = new URL(`${url('/contact')}?envoye=1`, Astro.site ?? site.url).
         </div>
 
         <Reveal class="contact__panel" delay={0.12}>
-          <form class="form" action={contactForm.post} method="POST" data-contact-form>
-            {/* FormSubmit settings; the honeypot stays empty for humans. */}
-            <input type="hidden" name="_subject" value="Nouveau message depuis ebsprojects.studio" />
-            <input type="hidden" name="_template" value="table" />
-            <input type="hidden" name="_next" value={returnTo} />
-            <input type="text" name="_honey" class="form__trap" tabindex="-1" autocomplete="off" aria-hidden="true" />
+          <form class="form" action={contactForm.endpoint} method="POST" data-contact-form>
+            {/* Web3Forms settings; the honeypot stays unchecked for humans. */}
+            <input type="hidden" name="access_key" value={contactForm.accessKey} />
+            <input type="hidden" name="subject" value="Nouveau message depuis ebsprojects.studio" />
+            <input type="hidden" name="from_name" value="ebsprojects.studio" />
+            <input type="hidden" name="redirect" value={returnTo} />
+            <input type="checkbox" name="botcheck" class="form__trap" tabindex="-1" autocomplete="off" aria-hidden="true" />
 
             <div class="form__row form__row--2">
               <div class="field">
@@ -413,14 +414,14 @@ const returnTo = new URL(`${url('/contact')}?envoye=1`, Astro.site ?? site.url).
       const data = new FormData(form);
       /* Bots fill every field; people never see this one. Answer as if it
          worked, so the button never looks dead. */
-      if (data.get('_honey')) {
+      if (data.get('botcheck')) {
         showThanks();
         return;
       }
 
       const payload: Record<string, string> = {};
       for (const [key, value] of data.entries()) {
-        if (key === '_next' || key === '_honey' || key === 'expertises') continue;
+        if (key === 'redirect' || key === 'botcheck' || key === 'expertises') continue;
         payload[key] = String(value);
       }
       const chosen = data.getAll('expertises').map(String);
@@ -432,7 +433,7 @@ const returnTo = new URL(`${url('/contact')}?envoye=1`, Astro.site ?? site.url).
 
       let res: Response;
       try {
-        res = await fetch(contactForm.ajax, {
+        res = await fetch(contactForm.endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
           body: JSON.stringify(payload),
@@ -440,7 +441,7 @@ const returnTo = new URL(`${url('/contact')}?envoye=1`, Astro.site ?? site.url).
       } catch {
         /* Unreachable from here — an ad blocker, a strict privacy setting or
            a dropped connection. The browser's own submission gets through
-           most of those, and FormSubmit then sends the visitor back. */
+           most of those, and Web3Forms then sends the visitor back. */
         HTMLFormElement.prototype.submit.call(form);
         return;
       }
@@ -454,15 +455,7 @@ const returnTo = new URL(`${url('/contact')}?envoye=1`, Astro.site ?? site.url).
         return;
       }
 
-      /* Until the studio clicks the link in FormSubmit's activation e-mail,
-         every message is turned away with a notice saying so. */
-      const pending = /activat/i.test(String(body.message ?? ''));
-      fail(
-        pending
-          ? "Le formulaire n'est pas encore en service et votre message n'est pas parti."
-          : "Le message n'a pas pu partir.",
-        payload
-      );
+      fail("Le message n'a pas pu partir.", payload);
     });
 
     /** Explains the failure and offers the same message by e-mail, already

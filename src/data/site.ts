@@ -40,14 +40,14 @@ export const contact = {
 
 /** Order matches the footer bar on the original site. */
 /**
- * Where the contact form sends its messages. FormSubmit forwards each one to
- * the address in the URL; the very first submission triggers a one-off
- * activation e-mail to that address, which must be confirmed once.
- * To switch service later, change these two lines only.
+ * Where the contact form sends its messages: Web3Forms, which forwards each
+ * one to the address the access key was created with (the studio's Gmail).
+ * The key is public by design — it can only send messages to that address.
+ * FormSubmit, used before, accepted messages without delivering them.
  */
 export const contactForm = {
-  ajax: `https://formsubmit.co/ajax/${contact.email}`,
-  post: `https://formsubmit.co/${contact.email}`,
+  endpoint: 'https://api.web3forms.com/submit',
+  accessKey: 'adfe949d-12c0-4e90-8b1f-ca94a4029448',
 } as const;
 
 export const socials = [
