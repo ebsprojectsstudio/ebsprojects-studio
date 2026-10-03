@@ -9,6 +9,7 @@ order: 5
 cover: "../../assets/images/terra-delyssa-07.jpg"
 thumb: "../../assets/images/terra-delyssa-01.jpg"
 homeHoverImage: "../../assets/images/terra-delyssa-04.jpg"
+homeHoverWhole: true
 strip:
   - "../../assets/images/terra-delyssa-01.jpg"
   - "../../assets/images/terra-delyssa-02.jpg"

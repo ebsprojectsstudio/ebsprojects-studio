@@ -40,6 +40,9 @@ const projects = defineCollection({
       /** Optional photograph revealed when the home page card is hovered;
           falls back to another photograph of the project. */
       homeHoverImage: image().optional(),
+      /** Show that photograph whole rather than cropped to the card, on a
+          blurred copy of itself. */
+      homeHoverWhole: z.boolean().default(false),
       /** The scrolling band at the top of the project page. */
       strip: z.array(image()).min(1),
       /** The grid below it. Each slot's span and crop ratio were measured on

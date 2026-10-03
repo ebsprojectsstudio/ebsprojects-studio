@@ -105,14 +105,24 @@ const statement =
                       sizes="(max-width: 809px) 96vw, 55vw"
                       style={p.data.homeZoom ? `--zoom:${p.data.homeZoom}` : undefined}
                     />
-                    <Image
-                      class="swap__alt"
-                      src={alt(p)}
-                      alt=""
-                      widths={[500, 800, 1240, 1800, 2400]}
-                      quality={85}
-                      sizes="(max-width: 809px) 96vw, 55vw"
-                    />
+                    {
+                      p.data.homeHoverWhole ? (
+                        <span class="swap__alt swap__alt--whole">
+                          <Image class="swap__backdrop" src={alt(p)} alt="" widths={[400]} quality={60} sizes="400px" />
+                          <Image src={alt(p)} alt="" widths={[500, 800, 1240, 1800, 2400]} quality={85}
+                            sizes="(max-width: 809px) 96vw, 55vw" />
+                        </span>
+                      ) : (
+                        <Image
+                          class="swap__alt"
+                          src={alt(p)}
+                          alt=""
+                          widths={[500, 800, 1240, 1800, 2400]}
+                          quality={85}
+                          sizes="(max-width: 809px) 96vw, 55vw"
+                        />
+                      )
+                    }
                     </span>
                   </span>
                   <span class="scard__caption">
@@ -336,11 +346,25 @@ const statement =
     transform: none;
   }
 
-  a:hover .swap :global(img:not(.swap__alt)) { transform: scale(1.04); }
+  a:hover .swap__inner > :global(img:not(.swap__alt)) { transform: scale(1.04); }
+
+  /* A hover photograph shown whole (homeHoverWhole): contained, over a
+     blurred, enlarged copy of itself that fills the rest of the card. */
+  .swap :global(.swap__alt--whole) { display: block; overflow: hidden; }
+  .swap :global(.swap__alt--whole img) {
+    position: absolute;
+    inset: 0;
+    object-fit: contain;
+  }
+  .swap :global(.swap__alt--whole .swap__backdrop) {
+    object-fit: cover;
+    filter: blur(28px) brightness(0.8);
+    transform: scale(1.2);
+  }
 
   /* A per-project zoom (homeZoom), on its own property so it stacks with
      the hover and fade-in transforms instead of being replaced by them. */
-  .swap :global(img:not(.swap__alt)) { scale: var(--zoom, 1); }
+  .swap__inner > :global(img:not(.swap__alt)) { scale: var(--zoom, 1); }
 
   /* --- Studio statement --------------------------------------------------- */
 

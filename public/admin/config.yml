@@ -126,6 +126,14 @@ collections:
           l'accueil. Choisir une image bien différente de l'image principale.
         widget: image
         required: false
+      - name: homeHoverWhole
+        label: Image au survol en entier
+        hint: >-
+          Cocher pour que l'image au survol ne soit pas recadrée : elle
+          s'affiche en entier, sur un fond flou fait de la même image.
+        widget: boolean
+        default: false
+        required: false
       - name: strip
         label: Bandeau défilant (haut de la page projet)
         hint: Trois images ou plus. Elles défilent en boucle.
