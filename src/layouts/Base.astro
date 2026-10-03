@@ -189,9 +189,12 @@ const jsonLd = {
             return;
           }
 
-          const limit = height * 0.92;
+          /* Elements reveal once their top passes 92% of the viewport, or the
+             fraction they ask for with data-reveal-at (later = more of the
+             animation is seen). */
           onScroll.forEach((el) => {
-            if (el.getBoundingClientRect().top < limit) {
+            const at = Number(el.dataset.revealAt) || 0.92;
+            if (el.getBoundingClientRect().top < height * at) {
               show(el);
               onScroll.delete(el);
             }

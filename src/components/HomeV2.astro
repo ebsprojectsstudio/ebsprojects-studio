@@ -87,7 +87,7 @@ const statement =
         <div class="mosaic">
           {
             selected.map((p, i) => (
-              <Reveal class="mosaic__item r-30" delay={(i % 2) * 0.12}>
+              <Reveal class="mosaic__item" delay={(i % 2) * 0.15} data-reveal-at="0.8">
                 <a class="scard" href={url(`/projects/${p.id}`)}>
                   <span class="swap scard__media">
                     <span class="swap__inner">
@@ -123,7 +123,7 @@ const statement =
           }
         </div>
 
-        <Reveal class="more r-20">
+        <Reveal class="more r-20" data-reveal-at="0.85">
           <a class="more__button" href={url('/projects')}>
             <span>Voir tous les projets</span>
             <span class="more__count">({pad(projects.length)})</span>
@@ -265,8 +265,8 @@ const statement =
     display: block;
     width: 100%;
     height: 100%;
-    transform: scale(1.08);
-    transition: transform 1.6s var(--spring-smooth) calc(0.2s + var(--reveal-delay, 0s));
+    transform: scale(1.12);
+    transition: transform 1.8s var(--spring-smooth) calc(0.2s + var(--reveal-delay, 0s));
   }
 
   :global(.is-visible) > .scard .swap__inner,
@@ -423,6 +423,10 @@ const statement =
   .mosaic :global(.mosaic__item) {
     grid-column: var(--col);
     margin-top: var(--drop, 0);
+    /* Rises further and more slowly than a plain block, so each project
+       visibly arrives as it is scrolled to. */
+    --rv-from-y: 60px;
+    --rv-dur: 1.6s;
   }
 
   .mosaic :global(.mosaic__item:nth-child(4n + 1)) { --col: 1 / span 7; --ratio: 3 / 2; }
