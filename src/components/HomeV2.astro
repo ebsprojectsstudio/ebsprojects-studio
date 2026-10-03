@@ -1,6 +1,7 @@
 ---
 /**
- * V2 of the home page, previewed at /apercu/v2 before it replaces the
+ * The proposed new home page, previewed at /apercu/v1 and /apercu/v2 (the
+ * same page with a different opening) before it replaces the
  * current one. Same palette, type and motion as the rest of the site; what
  * changes is how much room the work gets:
  *
@@ -24,13 +25,18 @@ import ExpertiseRail from './ExpertiseRail.astro';
 import ProcessSteps from './ProcessSteps.astro';
 import Showcase from './Showcase.astro';
 import { contact, clients } from '../data/site';
+import type { HeroStyle } from '../data/hero';
 import { url } from '../lib/url';
 
 interface Props {
+  /** Overrides the opening animation chosen in the CMS. */
+  variant?: HeroStyle;
+  /** Shown in the tab title of a preview, e.g. "V1". */
+  label?: string;
   /** Marks the page as a preview: not indexed. */
   preview?: boolean;
 }
-const { preview = false } = Astro.props;
+const { variant: forced, label = 'V2', preview = false } = Astro.props;
 
 type Project = CollectionEntry<'projects'>;
 
@@ -68,13 +74,13 @@ const statement =
   'Directrice artistique et designer graphique à Bordeaux, je crée des projets visuels sur mesure pour marques et institutions, en privilégiant sens, esthétique et impact.';
 ---
 
-<Base title={preview ? 'Aperçu — Accueil V2' : undefined} noindex={preview}>
+<Base title={preview ? `Aperçu — Accueil ${label}` : undefined} noindex={preview}>
   {/*
     The hero stays pinned while "Selected projects" rises over it on a grey
     panel, as on the V1; the title fades out as it comes.
   */}
   <div class="curtain">
-    <Hero variant={home.data.hero.style} slides={heroSlides} />
+    <Hero variant={forced ?? home.data.hero.style} slides={heroSlides} />
 
     {/* ------------------------------------------------- Selected projects */}
     <section class="section selected" id="work">
